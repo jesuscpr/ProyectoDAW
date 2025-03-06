@@ -1,24 +1,19 @@
 # ProyectoDAW
 
 ## Título del proyecto
-***
 PFinance - Finanzas personales
 
 ## Autor del proyecto
-***
 Jesús Carmelo Pérez Robles
 
 ## Introducción del proyecto
-***
 PFinance es una aplicación web diseñada para ayudar a los usuarios a gestionar eficientemente sus finanzas personales. El proyecto nace de la necesidad de tener una herramienta intuitiva que permita a cualquier persona, independientemente de sus conocimientos financieros, llevar un control detallado de sus ingresos y gastos, visualizar su situación económica de forma clara mediante gráficos interactivos, y tomar decisiones más informadas sobre su economía personal. A diferencia de otras soluciones en el mercado, PFinance se enfoca en la simplicidad de uso sin sacrificar funcionalidades avanzadas como el análisis predictivo de tendencias y la gestión de presupuestos personalizados.
 
 ## Finalidad
-***
 PFinance surge como respuesta a la necesidad creciente de herramientas digitales que faciliten la gestión financiera personal.
 Como gestionar los ingresos y gastos, establecer límites, notificaciones cuando te acerques a los límites de gastos, historial de transacciones, etc...
 
 ## Objetivos
-***
 Una vez puesto en marcha, PFinance permitirá a los usuarios:
 
 * Registrarse y crear perfiles personalizados con información financiera básica.
@@ -31,7 +26,6 @@ Una vez puesto en marcha, PFinance permitirá a los usuarios:
 * Acceder a todas las funcionalidades desde cualquier dispositivo gracias al diseño responsive.
 
 ## Medios a utilizar
-***
 
 ### Hardware
 * Ordenador de desarrollo
@@ -55,7 +49,6 @@ Una vez puesto en marcha, PFinance permitirá a los usuarios:
   * AWS
 
 ## Planificación
-***
 
 ### Análisis y Diseño (2 semanas)
 * Investigación de mercado y análisis de aplicaciones similares
