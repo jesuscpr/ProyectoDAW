@@ -1,7 +1,7 @@
 from django.contrib.auth import login
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.urls import reverse_lazy
-from django.views.generic import TemplateView, CreateView, UpdateView
+from django.views.generic import TemplateView, CreateView, UpdateView, DetailView
 
 from PFinance.forms import SignUpForm, ProfileEditForm
 from PFinance.models import UserProfile
@@ -27,6 +27,15 @@ class SignUpView(CreateView):
         response = super().form_valid(form)
         login(self.request, self.object)
         return response
+
+
+class ProfileView(LoginRequiredMixin, DetailView):
+    model = UserProfile
+    template_name = 'pfinance/profile_detail.html'
+    context_object_name = 'profile'
+
+    def get_object(self):
+        return self.request.user.profile
 
 
 class ProfileUpdateView(LoginRequiredMixin, UpdateView):
