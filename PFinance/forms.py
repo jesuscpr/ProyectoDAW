@@ -56,16 +56,26 @@ class SignUpForm(UserCreationForm):
 
 
 class ProfileEditForm(forms.ModelForm):
+    email = forms.EmailField(label='Email', widget=forms.EmailInput(attrs={'class': 'form-control'}))
     class Meta:
         model = UserProfile
-        fields = ['monthly_income', 'currency', 'notification_app']
-        widgets = {
-            'monthly_income': forms.NumberInput(attrs={'class': 'form-control'}),
-            'currency': forms.Select(attrs={'class': 'form-control'}),
-            'notification_app': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
-        }
-        labels = {
-            'monthly_income': 'Ingreso mensual',
-            'currency': 'Moneda',
-            'notification_app': 'Recibir notificaciones en la app',
-        }
+        fields = ['email', 'monthly_income', 'currency', 'notification_app']
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        if self.instance:
+            self.fields['email'].initial = self.instance.user.email
+
+    def save(self, commit=True):
+        profile = super().save(commit=False)
+        profile.user.email = self.cleaned_data['email']
+        if commit:
+            profile.user.save()
+            profile.save()
+        return profile
+
+    def clean_monthly_income(self):
+        income = self.cleaned_data.get('monthly_income')
+        if income and income < 0:
+            raise forms.ValidationError("El ingreso no puede ser negativo")
+        return income

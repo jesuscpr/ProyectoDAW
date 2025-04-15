@@ -1,0 +1,37 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h4>Mi perfil</h4>
+                </div>
+                <div class="card-body">
+                    <dl class="row">
+                        <dt class="col-sm-4">Usuario:</dt>
+                        <dd class="col-sm-8">{{ profile.user.username }}</dd>
+                        
+                        <dt class="col-sm-4">Email:</dt>
+                        <dd class="col-sm-8">{{ profile.user.email }}</dd>
+                        
+                        <dt class="col-sm-4">Ingreso mensual:</dt>
+                        <dd class="col-sm-8">{{ profile.monthly_income }} {{ profile.currency }}</dd>
+                        
+                        <dt class="col-sm-4">Notificaciones:</dt>
+                        <dd class="col-sm-8">
+                            {% if profile.notification_app %}
+                                <span class="text-success">Activadas</span>
+                            {% else %}
+                                <span class="text-danger">Desactivadas</span>
+                            {% endif %}
+                        </dd>
+                    </dl>
+                    <a href="{% url 'pfinance:profile_edit' %}" class="btn btn-primary">Editar perfil</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
