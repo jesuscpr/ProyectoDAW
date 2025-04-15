@@ -1,0 +1,12 @@
+{% extends 'base_auth.html' %}
+{% block title %}Logout / PFinance{% endblock %}
+{% block content %}
+   <div class="container d-flex justify-content-center align-items-center min-vh-50">
+        <div class="alert alert-secondary text-center shadow-lg p-5 rounded-4 mt-5" role="alert" style="background-color: rgba(50,49,49,0.63);">
+            <h1 class="display-4 fw-bold" style="color:white">¡Sesión cerrada!</h1>
+            <p class="lead "style="color:white">Has cerrado sesión correctamente.</p>
+            <a href="{% url 'pfinance:login' %}" class="btn btn-primary btn-lg mt-3">Iniciar sesión</a>
+        </div>
+    </div>
+
+{% endblock %}

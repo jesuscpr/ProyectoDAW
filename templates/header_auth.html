@@ -1,0 +1,42 @@
+<header class="p-3 sticky-top" style="background-color: rgba(0,0,0,0.81)">
+    <div class="container">
+        <div class="d-flex flex-wrap align-items-center justify-content-center justify-content-lg-start">
+
+            {# Enlace a inicio #}
+            <div class="text-start">
+                <ul class="nav col-12 col-lg-auto me-lg-auto mb-2 justify-content-center mb-md-0">
+                    <li>
+                        <button class="btn btn-primary m-1 p-1"><a class="nav-link px-2 text-white p-0 m-0" href="{% url 'pfinance:dashboard' %}">Inicio</a></button>
+                    </li>
+                </ul>
+            </div>
+
+            {# Enlaces hacia las paginas #}
+            <ul class="nav col-12 col-lg-auto me-lg-auto ms-lg-auto mb-2 justify-content-center mb-md-0">
+                <li>
+                    <button class="btn btn-primary m-1 p-1"><a class="nav-link px-2 text-white p-0 m-0" href="{% url 'pfinance:dashboard' %}">Botón</a></button>
+                </li>
+                <li>
+                    <button class="btn btn-primary m-1 p-1"><a class="nav-link px-2 text-white p-0 m-0" href="{% url 'pfinance:dashboard' %}">Botón</a></button>
+                </li>
+                <li>
+                    <button class="btn btn-primary m-1 p-1"><a class="nav-link px-2 text-white p-0 m-0" href="{% url 'pfinance:dashboard' %}">Botón</a></button>
+                </li>
+                <li>
+                    <button class="btn btn-primary m-1 p-1"><a class="nav-link px-2 text-white p-0 m-0" href="{% url 'pfinance:dashboard' %}">Botón</a></button>
+                </li>
+                <li>
+                    <button class="btn btn-primary m-1 p-1"><a class="nav-link px-2 text-white p-0 m-0" href="{% url 'pfinance:dashboard' %}">Botón</a></button>
+                </li>
+            </ul>
+
+            {# Cerrar sesion #}
+            <div class="text-end">
+                <form method="post" action="{% url 'pfinance:login' %}">
+                    {% csrf_token %}
+                    <input type="submit" value="Iniciar sesión" class="btn btn-primary">
+                </form>
+            </div>
+        </div>
+    </div>
+</header>
