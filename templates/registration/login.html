@@ -1,0 +1,30 @@
+{% extends 'base_auth.html' %}
+
+{% block title %}Login / PFinance{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-center align-items-center vh-50">
+    <div class="card p-5 shadow-md  text-light mt-5" style="max-width: 500px; width: 100%; border-radius: 12px;background-color: rgba(21,21,21,0.73);">
+        <h2 class="text-center fs-1 mb-3">Iniciar Sesión</h2>
+        <form method="post">
+            {% csrf_token %}
+            <div class="mb-4">
+                <label for="id_username" class="form-label fs-3 text-center">Usuario:</label>
+               <span class="form-control-md w-100" style="margin-left: 12%;">{{ form.username }}</span>
+            </div>
+            <div class="mb-4">
+                <label for="id_password" class="form-label fs-3 ">Contraseña:</label>
+               <span class="form-control-md w-100" style="">{{ form.password }}</span>
+            </div>
+            {% if form.errors %}
+                {% for error in form.non_field_errors %}
+                <div class="text-danger"><p>{{ error }}</p></div>
+                {% endfor %}
+            {% endif %}
+            <button type="submit" class="btn btn-primary btn-lg w-100">Iniciar Sesión</button>
+            <p class="lead mt-4 pt-2" style="border-top: 3px solid darkslategray">¿No tienes cuenta?</p>
+            <a href="{% url 'pfinance:register' %}" class="btn btn-warning btn-lg w-100">Registrarse</a>
+        </form>
+    </div>
+</div>
+{% endblock %}
