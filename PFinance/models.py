@@ -17,11 +17,13 @@ class Category(models.Model):
     def __str__(self):
         return self.name
 
+
 CURRENCY_CHOICES = [
         ('EUR', 'Euro (€)'),
         ('USD', 'Dólar (US$)'),
         ('GBP', 'Libra (£)'),
     ]
+
 
 class UserProfile(models.Model):
     """Perfil extendido del usuario con información financiera adicional"""
