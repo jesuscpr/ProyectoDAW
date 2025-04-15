@@ -2,7 +2,6 @@ from django import forms
 from django.contrib.auth.forms import UserCreationForm
 from django.contrib.auth.models import User
 from .models import UserProfile, CURRENCY_CHOICES
-from django.utils.translation import gettext_lazy as _
 
 class SignUpForm(UserCreationForm):
     monthly_income = forms.DecimalField(
