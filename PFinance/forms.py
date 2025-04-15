@@ -53,3 +53,19 @@ class SignUpForm(UserCreationForm):
         )
 
         return user
+
+
+class ProfileEditForm(forms.ModelForm):
+    class Meta:
+        model = UserProfile
+        fields = ['monthly_income', 'currency', 'notification_app']
+        widgets = {
+            'monthly_income': forms.NumberInput(attrs={'class': 'form-control'}),
+            'currency': forms.Select(attrs={'class': 'form-control'}),
+            'notification_app': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
+        }
+        labels = {
+            'monthly_income': 'Ingreso mensual',
+            'currency': 'Moneda',
+            'notification_app': 'Recibir notificaciones en la app',
+        }

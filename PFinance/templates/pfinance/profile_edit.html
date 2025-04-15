@@ -1,0 +1,49 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h4>Editar perfil</h4>
+                </div>
+                <div class="card-body">
+                    <form method="post">
+                        {% csrf_token %}
+                        
+                        <div class="mb-3">
+                            <label class="form-label">{{ form.monthly_income.label }}</label>
+                            {{ form.monthly_income }}
+                            {% if form.monthly_income.errors %}
+                                <div class="text-danger">{{ form.monthly_income.errors }}</div>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label class="form-label">{{ form.currency.label }}</label>
+                            {{ form.currency }}
+                            {% if form.currency.errors %}
+                                <div class="text-danger">{{ form.currency.errors }}</div>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="mb-3 form-check">
+                            {{ form.notification_app }}
+                            <label class="form-check-label" for="{{ form.notification_app.id_for_label }}">
+                                {{ form.notification_app.label }}
+                            </label>
+                            {% if form.notification_app.errors %}
+                                <div class="text-danger">{{ form.notification_app.errors }}</div>
+                            {% endif %}
+                        </div>
+                        
+                        <button type="submit" class="btn btn-primary">Guardar cambios</button>
+                        <a href="{% url 'pfinance:dashboard' %}" class="btn btn-secondary">Cancelar</a>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
