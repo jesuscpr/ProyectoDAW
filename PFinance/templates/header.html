@@ -1,42 +1,97 @@
-<header class="p-3 sticky-top" style="background-color: rgba(0,0,0,0.81)">
-    <div class="container">
-        <div class="d-flex flex-wrap align-items-center justify-content-center justify-content-lg-start">
+<header class="navbar navbar-expand-lg sticky-top">
+    <div class="container-fluid">
+        <!-- Logo/Botón Dashboard -->
+        <a class="navbar-brand d-flex align-items-center me-auto" href="{% url 'pfinance:dashboard' %}">
+            <i class="bi bi-house-door-fill me-2"></i>
+            <span class="d-none d-sm-inline">Dashboard</span>
+        </a>
 
-            {# Enlace a inicio #}
-            <div class="text-start">
-                <ul class="nav col-12 col-lg-auto me-lg-auto mb-2 justify-content-center mb-md-0">
-                    <li>
-                        <button class="btn btn-primary m-1 p-1"><a class="nav-link px-2 text-white p-0 m-0" href="{% url 'pfinance:dashboard' %}">Inicio</a></button>
-                    </li>
-                </ul>
-            </div>
+        <!-- Botón Hamburguesa -->
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarContent">
+            <span class="navbar-toggler-icon"></span>
+        </button>
 
-            {# Enlaces hacia las paginas #}
-            <ul class="nav col-12 col-lg-auto me-lg-auto ms-lg-auto mb-2 justify-content-center mb-md-0">
-                <li>
-                    <button class="btn btn-primary m-1 p-1"><a class="nav-link px-2 text-white p-0 m-0" href="{% url 'pfinance:dashboard' %}">Botón</a></button>
+        <!-- Contenido del Navbar -->
+        <div class="collapse navbar-collapse" id="navbarContent">
+            <!-- Menú Central -->
+            <ul class="navbar-nav mx-auto mb-2 mb-lg-0">
+                <li class="nav-item">
+                    <a class="nav-link" href="{% url 'pfinance:dashboard' %}">
+                        <i class="bi bi-arrow-left-right me-1"></i> Transacciones
+                    </a>
                 </li>
-                <li>
-                    <button class="btn btn-primary m-1 p-1"><a class="nav-link px-2 text-white p-0 m-0" href="{% url 'pfinance:dashboard' %}">Botón</a></button>
+                <li class="nav-item">
+                    <a class="nav-link" href="{% url 'pfinance:dashboard' %}">
+                        <i class="bi bi-wallet2 me-1"></i> Presupuestos
+                    </a>
                 </li>
-                <li>
-                    <button class="btn btn-primary m-1 p-1"><a class="nav-link px-2 text-white p-0 m-0" href="{% url 'pfinance:dashboard' %}">Botón</a></button>
+                <li class="nav-item">
+                    <a class="nav-link" href="{% url 'pfinance:alerts' %}">
+                        <i class="bi bi-exclamation-triangle me-1"></i> Alertas
+                    </a>
                 </li>
-                <li>
-                    <button class="btn btn-primary m-1 p-1"><a class="nav-link px-2 text-white p-0 m-0" href="{% url 'pfinance:dashboard' %}">Botón</a></button>
-                </li>
-                <li>
-                    <button class="btn btn-primary m-1 p-1"><a class="nav-link px-2 text-white p-0 m-0" href="{% url 'pfinance:dashboard' %}">Botón</a></button>
+                <li class="nav-item">
+                    <a class="nav-link" href="{% url 'pfinance:dashboard' %}">
+                        <i class="bi bi-arrow-repeat me-1"></i> Pagos Recurrentes
+                    </a>
                 </li>
             </ul>
 
-            {# Cerrar sesion #}
-            <div class="text-end">
-                <form method="post" action="{% url 'pfinance:logout' %}">
-                    {% csrf_token %}
-                    <input type="submit" value="Cerrar sesión" class="btn btn-primary">
-                </form>
-            </div>
+            <!-- Menú Usuario -->
+            <ul class="navbar-nav">
+                {% if user.is_authenticated %}
+                    <!-- Alertas -->
+                    <li class="nav-item dropdown me-2">
+                        <a class="nav-link position-relative" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false" id="alertsDropdown">
+                            <i class="bi bi-bell-fill"></i>
+                            {% if unread_count > 0 %}
+                                <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger" style="font-size: 0.6em;">
+                                        {{ unread_count }}
+                                    </span>
+                            {% endif %}
+                        </a>
+                        <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="alertsDropdown">
+                            <!-- Contenido del dropdown de alertas -->
+                        </ul>
+                    </li>
+
+                    <!-- Perfil Usuario - Versión corregida -->
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle d-flex align-items-center" href="#" id="userDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                            <span class="me-2">{{ user.username }}</span>
+                            <i class="bi bi-person-circle"></i>
+                        </a>
+                        <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="userDropdown">
+                            <li>
+                                <a class="dropdown-item" href="{% url 'pfinance:profile' %}">
+                                    <i class="bi bi-person me-2"></i> Perfil
+                                </a>
+                            </li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li>
+                                <form method="post" action="{% url 'pfinance:logout' %}">
+                                    {% csrf_token %}
+                                    <button type="submit" class="dropdown-item">
+                                        <i class="bi bi-box-arrow-right me-2"></i> Cerrar sesión
+                                    </button>
+                                </form>
+                            </li>
+                        </ul>
+                    </li>
+                {% else %}
+                    <!-- Usuario no autenticado -->
+                    <li class="nav-item">
+                        <a class="btn btn-warning me-2" href="{% url 'pfinance:login' %}">
+                            <i class="bi bi-box-arrow-in-right me-1"></i> Iniciar Sesión
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="btn btn-primary" href="{% url 'pfinance:register' %}">
+                            <i class="bi bi-person-plus me-1"></i> Registrarse
+                        </a>
+                    </li>
+                {% endif %}
+            </ul>
         </div>
     </div>
 </header>
