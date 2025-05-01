@@ -35,7 +35,7 @@ class DashboardView(LoginRequiredMixin, TemplateView):
         context["usuario"] = user_with_alerts.profile
         context['unread_count'] = user_with_alerts.unread_count
         context['recent_alerts'] = user_with_alerts.recent_alerts
-
+        
         return context
 
 class SignUpView(CreateView):
