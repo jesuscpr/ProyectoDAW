@@ -1,0 +1,9 @@
+.unread-alert {
+    background-color: rgba(13, 110, 253, 0.05);
+}
+
+.dropdown-menu {
+    min-width: 320px;
+    max-height: 400px;
+    overflow-y: auto;
+}
