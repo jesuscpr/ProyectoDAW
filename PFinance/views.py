@@ -1,6 +1,8 @@
 from django.contrib.auth import login
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin
+from django.contrib.auth.models import User
+from django.db.models import Count, Prefetch, Q
 from django.http import JsonResponse
 from django.urls import reverse_lazy
 from django.utils.decorators import method_decorator
@@ -17,8 +19,23 @@ class DashboardView(LoginRequiredMixin, TemplateView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context["usuario"] = self.request.user.profile
-        context['unread_alerts'] = self.request.user.alerts.filter(read=False).count()
+        user = self.request.user
+
+        # Optimización con prefetch_related y annotate
+        user_with_alerts = User.objects.filter(pk=user.pk).prefetch_related(
+            Prefetch(
+                'alerts',
+                queryset=Alert.objects.order_by('-created_at')[:5],  # Solo las 5 más recientes
+                to_attr='recent_alerts'
+            )
+        ).annotate(
+            unread_count=Count('alerts', filter=Q(alerts__read=False))
+        ).first()
+
+        context["usuario"] = user_with_alerts.profile
+        context['unread_count'] = user_with_alerts.unread_count
+        context['recent_alerts'] = user_with_alerts.recent_alerts
+
         return context
 
 class SignUpView(CreateView):

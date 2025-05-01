@@ -2,8 +2,7 @@
     <div class="container-fluid">
         <!-- Logo/Botón Dashboard -->
         <a class="navbar-brand d-flex align-items-center me-auto" href="{% url 'pfinance:dashboard' %}">
-            <i class="bi bi-house-door-fill me-2"></i>
-            <span class="d-none d-sm-inline">Dashboard</span>
+            <span class="d-none d-sm-inline">PFinance</span>
         </a>
 
         <!-- Botón Hamburguesa -->
@@ -15,6 +14,11 @@
         <div class="collapse navbar-collapse" id="navbarContent">
             <!-- Menú Central -->
             <ul class="navbar-nav mx-auto mb-2 mb-lg-0">
+                <li class="nav-item">
+                    <a class="nav-link" href="{% url 'pfinance:dashboard' %}">
+                        <i class="bi bi-house-door me-1"></i>Panel
+                    </a>
+                </li>
                 <li class="nav-item">
                     <a class="nav-link" href="{% url 'pfinance:dashboard' %}">
                         <i class="bi bi-arrow-left-right me-1"></i> Transacciones
@@ -51,11 +55,40 @@
                             {% endif %}
                         </a>
                         <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="alertsDropdown">
-                            <!-- Contenido del dropdown de alertas -->
+                            <li class="dropdown-header fw-bold px-3 py-2">Tus Alertas</li>
+                            
+                            {% if recent_alerts %}
+                                {% for alert in recent_alerts %}
+                                    <li>
+                                        <a class="dropdown-item {% if not alert.read %}unread-alert{% endif %}" href="{% url 'pfinance:alert_detail' alert.id %}">
+                                            <div class="d-flex align-items-start">
+                                                <i class="bi bi-{% if alert.alert_type == 'budget' %}pie-chart-fill text-primary{% elif alert.alert_type == 'payment' %}calendar-check-fill text-warning{% elif alert.alert_type == 'goal' %}trophy-fill text-success{% else %}info-circle-fill text-info{% endif %} me-2 mt-1"></i>
+                                                <div>
+                                                    <div class="fw-semibold">{{ alert.title }}</div>
+                                                    <small class="text-muted">{{ alert.get_alert_type_display }}</small>
+                                                    <div class="small text-muted mt-1">{{ alert.created_at|timesince }} atrás</div>
+                                                </div>
+                                            </div>
+                                        </a>
+                                    </li>
+                                {% endfor %}
+                            {% else %}
+                                <li class="px-3 py-3 text-center text-muted">
+                                    <i class="bi bi-bell-slash-fill d-block mb-2" style="font-size: 1.5rem;"></i>
+                                    No tienes alertas
+                                </li>
+                            {% endif %}
+                            
+                            <li><hr class="dropdown-divider mx-3"></li>
+                            <li>
+                                <a class="dropdown-item text-center" href="{% url 'pfinance:alerts' %}">
+                                    Ver todas las alertas <i class="bi bi-chevron-right ms-1"></i>
+                                </a>
+                            </li>
                         </ul>
                     </li>
 
-                    <!-- Perfil Usuario - Versión corregida -->
+                    <!-- Perfil Usuario -->
                     <li class="nav-item dropdown">
                         <a class="nav-link dropdown-toggle d-flex align-items-center" href="#" id="userDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
                             <span class="me-2">{{ user.username }}</span>
