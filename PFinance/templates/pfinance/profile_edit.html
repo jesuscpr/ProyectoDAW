@@ -1,4 +1,5 @@
 {% extends 'base.html' %}
+{% load static %}
 
 {% block content %}
 <div class="container mt-5">
@@ -6,40 +7,69 @@
         <div class="col-md-6">
             <div class="card">
                 <div class="card-header">
-                    <h4>Editar perfil</h4>
+                    <h4 class="mb-0">Editar perfil</h4>
                 </div>
                 <div class="card-body">
-                    <form method="post">
+                    <form method="post" novalidate>
                         {% csrf_token %}
                         
+                        <!-- Email -->
                         <div class="mb-3">
-                            <label class="form-label">{{ form.monthly_income.label }}</label>
-                            {{ form.monthly_income }}
-                            {% if form.monthly_income.errors %}
-                                <div class="text-danger">{{ form.monthly_income.errors }}</div>
+                            <label for="{{ form.email.id_for_label }}" class="form-label">{{ form.email.label }}</label>
+                            {{ form.email }}
+                            {% if form.email.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {{ form.email.errors|join:", " }}
+                                </div>
                             {% endif %}
                         </div>
                         
+                        <!-- Monthly Income -->
                         <div class="mb-3">
-                            <label class="form-label">{{ form.currency.label }}</label>
+                            <label for="{{ form.monthly_income.id_for_label }}" class="form-label">{{ form.monthly_income.label }}</label>
+                            <div class="input-group">
+                                <span class="input-group-text">{{ userprofile.currency }}</span>
+                                {{ form.monthly_income }}
+                            </div>
+                            {% if form.monthly_income.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {{ form.monthly_income.errors|join:", " }}
+                                </div>
+                            {% endif %}
+                        </div>
+                        
+                        <!-- Currency -->
+                        <div class="mb-3">
+                            <label for="{{ form.currency.id_for_label }}" class="form-label">{{ form.currency.label }}</label>
                             {{ form.currency }}
                             {% if form.currency.errors %}
-                                <div class="text-danger">{{ form.currency.errors }}</div>
+                                <div class="invalid-feedback d-block">
+                                    {{ form.currency.errors|join:", " }}
+                                </div>
                             {% endif %}
                         </div>
                         
-                        <div class="mb-3 form-check">
+                        <!-- Notification App -->
+                        <div class="mb-3 form-check form-switch">
                             {{ form.notification_app }}
                             <label class="form-check-label" for="{{ form.notification_app.id_for_label }}">
                                 {{ form.notification_app.label }}
                             </label>
                             {% if form.notification_app.errors %}
-                                <div class="text-danger">{{ form.notification_app.errors }}</div>
+                                <div class="invalid-feedback d-block">
+                                    {{ form.notification_app.errors|join:", " }}
+                                </div>
                             {% endif %}
                         </div>
                         
-                        <button type="submit" class="btn btn-primary">Guardar cambios</button>
-                        <a href="{% url 'pfinance:profile' %}" class="btn btn-secondary">Cancelar</a>
+                        <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                            <a href="{% url 'pfinance:profile' %}" class="btn btn-secondary me-md-2">
+                                <i class="bi bi-x-circle me-1"></i> Cancelar
+                            </a>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="bi bi-save me-1"></i> Guardar cambios
+                            </button>
+                        </div>
                     </form>
                 </div>
             </div>

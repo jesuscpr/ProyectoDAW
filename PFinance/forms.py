@@ -1,6 +1,9 @@
 from django import forms
 from django.contrib.auth.forms import UserCreationForm
 from django.contrib.auth.models import User
+from django.core.exceptions import ValidationError
+from django.db import transaction
+
 from .models import UserProfile, CURRENCY_CHOICES
 
 class SignUpForm(UserCreationForm):
@@ -56,23 +59,55 @@ class SignUpForm(UserCreationForm):
 
 
 class ProfileEditForm(forms.ModelForm):
-    email = forms.EmailField(label='Email', widget=forms.EmailInput(attrs={'class': 'form-control'}))
+    email = forms.EmailField(
+        label='Email',
+        widget=forms.EmailInput(attrs={'class': 'form-control'})
+    )
+
     class Meta:
         model = UserProfile
         fields = ['email', 'monthly_income', 'currency', 'notification_app']
+        labels = {
+            'email': 'Correo electrónico',
+            'monthly_income': 'Ingreso mensual',
+            'currency': 'Moneda',
+            'notification_app': 'Recibir notificaciones en la app'
+        }
+        widgets = {
+            'monthly_income': forms.NumberInput(attrs={'class': 'form-control'}),
+            'currency': forms.Select(attrs={'class': 'form-control'}),
+            'notification_app': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
+        }
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        if self.instance:
+        self.fields['email'].label = "Correo electrónico"
+        self.fields['monthly_income'].label = 'Ingreso mensual'
+        self.fields['currency'].label = 'Moneda'
+        self.fields['notification_app'].label = 'Recibir notificaciones en la app'
+        if self.instance and hasattr(self.instance, 'user'):
             self.fields['email'].initial = self.instance.user.email
 
     def save(self, commit=True):
         profile = super().save(commit=False)
-        profile.user.email = self.cleaned_data['email']
+        user = profile.user
+        user.email = self.cleaned_data['email']
+
         if commit:
-            profile.user.save()
-            profile.save()
+            try:
+                with transaction.atomic():
+                    user.save()
+                    profile.save()
+            except Exception as e:
+                raise ValidationError(f"Error al guardar: {str(e)}")
+
         return profile
+
+    def clean_email(self):
+        email = self.cleaned_data.get('email')
+        if email and User.objects.filter(email=email).exclude(pk=self.instance.user.pk).exists():
+            raise forms.ValidationError("Ya existe un usuario con ese email")
+        return email
 
     def clean_monthly_income(self):
         income = self.cleaned_data.get('monthly_income')

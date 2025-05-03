@@ -1,3 +1,4 @@
+from django.contrib import messages
 from django.contrib.auth import login
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin
@@ -62,11 +63,14 @@ class ProfileUpdateView(LoginRequiredMixin, UpdateView):
     model = UserProfile
     form_class = ProfileEditForm
     template_name = 'pfinance/profile_edit.html'
-    success_url = reverse_lazy('pfinance:dashboard')
+    success_url = reverse_lazy('pfinance:profile')
 
     def get_object(self):
-        # Obtiene el perfil del usuario actual
         return self.request.user.profile
+
+    def form_valid(self, form):
+        messages.success(self.request, "Perfil actualizado correctamente!")
+        return super().form_valid(form)
 
 
 # Vista para listar alertas
