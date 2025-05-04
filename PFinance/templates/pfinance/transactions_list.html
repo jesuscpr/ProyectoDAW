@@ -1,0 +1,155 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="card">
+        <div class="card-header">
+            <div class="d-flex justify-content-between align-items-center">
+                <h2 class="mb-0">
+                    <i class="bi bi-cash-stack"></i> Mis Transacciones
+                </h2>
+                <div>
+                    <a href="{% url 'pfinance:transactions_list' %}?type=expense" class="btn btn-sm btn-outline-light me-2">
+                        <i class="bi bi-arrow-up-circle"></i> Gastos
+                    </a>
+                    <a href="{% url 'pfinance:transactions_list' %}?type=income" class="btn btn-sm btn-outline-light me-2">
+                        <i class="bi bi-arrow-down-circle"></i> Ingresos
+                    </a>
+                    <a href="{% url 'pfinance:transactions_create' %}" class="btn btn-primary btn-sm">
+                        <i class="bi bi-plus-lg"></i> Nueva
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <div class="card-body">
+            <!-- Resumen -->
+            <div class="row mb-4">
+                <div class="col-md-4">
+                    <div class="card bg-success text-white mb-3 mb-md-0">
+                        <div class="card-body">
+                            <h5 class="card-title">Ingresos</h5>
+                            <p class="display-6">{{ total_income|floatformat:2 }} {{ request.user.profile.currency }}</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card bg-danger text-white mb-3 mb-md-0">
+                        <div class="card-body">
+                            <h5 class="card-title">Gastos</h5>
+                            <p class="display-6">{{ total_expenses|floatformat:2 }} {{ request.user.profile.currency }}</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card bg-{% if balance >= 0 %}primary{% else %}warning{% endif %} text-white">
+                        <div class="card-body">
+                            <h5 class="card-title">Balance</h5>
+                            <p class="display-6">{{ balance|floatformat:2 }} {{ request.user.profile.currency }}</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Lista de transacciones -->
+            {% if transactions %}
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th>Fecha</th>
+                            <th>Tipo</th>
+                            <th>Categoría</th>
+                            <th>Monto</th>
+                            <th>Asunto</th>
+                            <th>Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for transaction in transactions %}
+                        <tr>
+                            <td>{{ transaction.date|date:"d/m/Y H:i" }}</td>
+                            <td>
+                                <span class="badge bg-{% if transaction.is_expense %}danger{% else %}success{% endif %}">
+                                    {% if transaction.is_expense %}Gasto{% else %}Ingreso{% endif %}
+                                </span>
+                            </td>
+                            <td>
+                                {% if transaction.category %}
+                                    {{ transaction.category.name }}
+                                {% else %}
+                                    <em>Sin categoría</em>
+                                {% endif %}
+                            </td>
+                            <td class="fw-bold {% if transaction.is_expense %}text-danger{% else %}text-success{% endif %}">
+                                {% if transaction.is_expense %}-{% else %}+{% endif %}
+                                {{ transaction.amount }} {{ request.user.profile.currency }}
+                            </td>
+                            <td>
+                                {% if transaction.description %}
+                                    {{ transaction.description|truncatechars:30 }}
+                                {% endif %}
+                            </td>
+                            <td>
+                                <a href="{% url 'pfinance:transactions_update' transaction.pk %}" class="btn btn-sm btn-outline-primary me-1">
+                                    <i class="bi bi-pencil"></i>
+                                </a>
+                                <a href="{% url 'pfinance:transactions_delete' transaction.pk %}" class="btn btn-sm btn-outline-danger">
+                                    <i class="bi bi-trash"></i>
+                                </a>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+                
+                <!-- Paginación -->
+                {% if is_paginated %}
+                <nav aria-label="Page navigation">
+                    <ul class="pagination justify-content-center mt-4">
+                        {% if page_obj.has_previous %}
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if request.GET.type %}&type={{ request.GET.type }}{% endif %}">
+                                &laquo; Anterior
+                            </a>
+                        </li>
+                        {% endif %}
+                        
+                        {% for num in page_obj.paginator.page_range %}
+                            {% if page_obj.number == num %}
+                            <li class="page-item active">
+                                <span class="page-link">{{ num }}</span>
+                            </li>
+                            {% else %}
+                            <li class="page-item">
+                                <a class="page-link" href="?page={{ num }}{% if request.GET.type %}&type={{ request.GET.type }}{% endif %}">
+                                    {{ num }}
+                                </a>
+                            </li>
+                            {% endif %}
+                        {% endfor %}
+                        
+                        {% if page_obj.has_next %}
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ page_obj.next_page_number }}{% if request.GET.type %}&type={{ request.GET.type }}{% endif %}">
+                                Siguiente &raquo;
+                            </a>
+                        </li>
+                        {% endif %}
+                    </ul>
+                </nav>
+                {% endif %}
+            </div>
+            {% else %}
+            <div class="text-center py-5">
+                <i class="bi bi-cash-stack display-4 text-muted mb-3"></i>
+                <p class="lead">No tienes transacciones registradas</p>
+                <a href="{% url 'pfinance:transactions_create' %}" class="btn btn-primary">
+                    <i class="bi bi-plus-lg me-1"></i> Registrar primera transacción
+                </a>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -3,15 +3,15 @@ from django.contrib.auth import login
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.auth.models import User
-from django.db.models import Count, Prefetch, Q
+from django.db.models import Count, Prefetch, Q, Sum
 from django.http import JsonResponse
 from django.urls import reverse_lazy
 from django.utils.decorators import method_decorator
 from django.views.decorators.http import require_POST
 from django.views.generic import TemplateView, CreateView, UpdateView, DetailView, DeleteView, ListView
 
-from PFinance.forms import SignUpForm, ProfileEditForm, BudgetForm
-from PFinance.models import UserProfile, Alert, Budget
+from PFinance.forms import SignUpForm, ProfileEditForm, BudgetForm, TransactionForm
+from PFinance.models import UserProfile, Alert, Budget, Transaction
 
 
 # Vista para el panel
@@ -112,7 +112,7 @@ class MarkAlertsReadView(TemplateView):
         return JsonResponse({'status': 'success', 'updated': updated})
 
 
-# Vistas para los presupuestos
+# Vista para la lista de presupuestos
 class BudgetListView(LoginRequiredMixin, ListView):
     model = Budget
     template_name = 'pfinance/budgets_list.html'
@@ -121,6 +121,8 @@ class BudgetListView(LoginRequiredMixin, ListView):
     def get_queryset(self):
         return Budget.objects.filter(user=self.request.user).select_related('category')
 
+
+# Vista para crear presupuestos
 class BudgetCreateView(LoginRequiredMixin, CreateView):
     model = Budget
     form_class = BudgetForm
@@ -136,6 +138,8 @@ class BudgetCreateView(LoginRequiredMixin, CreateView):
         form.instance.user = self.request.user
         return super().form_valid(form)
 
+
+# Vista para editar presupuestos
 class BudgetUpdateView(LoginRequiredMixin, UpdateView):
     model = Budget
     form_class = BudgetForm
@@ -151,6 +155,8 @@ class BudgetUpdateView(LoginRequiredMixin, UpdateView):
         messages.success(self.request, "Presupuesto actualizado exitosamente")
         return super().form_valid(form)
 
+
+# Vista para borrar presupuestos
 class BudgetDeleteView(LoginRequiredMixin, DeleteView):
     model = Budget
     template_name = 'pfinance/budgets_delete.html'
@@ -159,3 +165,87 @@ class BudgetDeleteView(LoginRequiredMixin, DeleteView):
     def delete(self, request, *args, **kwargs):
         messages.success(request, "Presupuesto eliminado exitosamente")
         return super().delete(request, *args, **kwargs)
+
+
+# Vista para la lista de transacciones
+class TransactionListView(LoginRequiredMixin, ListView):
+    model = Transaction
+    template_name = 'pfinance/transactions_list.html'
+    context_object_name = 'transactions'
+    paginate_by = 15
+
+    def get_queryset(self):
+        queryset = Transaction.objects.filter(
+            user=self.request.user
+        ).select_related('category').order_by('-date')
+
+        # Filtro por tipo (gasto/ingreso)
+        transaction_type = self.request.GET.get('type')
+        if transaction_type == 'expense':
+            queryset = queryset.filter(is_expense=True)
+        elif transaction_type == 'income':
+            queryset = queryset.filter(is_expense=False)
+
+        return queryset
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        user = self.request.user
+
+        # Totales para resumen
+        context['total_expenses'] = Transaction.objects.filter(
+            user=user, is_expense=True
+        ).aggregate(total=Sum('amount'))['total'] or 0
+
+        context['total_income'] = Transaction.objects.filter(
+            user=user, is_expense=False
+        ).aggregate(total=Sum('amount'))['total'] or 0
+
+        context['balance'] = context['total_income'] - context['total_expenses']
+
+        return context
+
+
+# Vista para crear transacciones
+class TransactionCreateView(LoginRequiredMixin, CreateView):
+    model = Transaction
+    form_class = TransactionForm
+    template_name = 'pfinance/transactions_create.html'
+    success_url = reverse_lazy('pfinance:transactions_list')
+
+    def get_form_kwargs(self):
+        kwargs = super().get_form_kwargs()
+        kwargs['user'] = self.request.user
+        return kwargs
+
+    def form_valid(self, form):
+        form.instance.user = self.request.user
+        return super().form_valid(form)
+
+
+# Vista para editar transacciones
+class TransactionUpdateView(LoginRequiredMixin, UpdateView):
+    model = Transaction
+    form_class = TransactionForm
+    template_name = 'pfinance/transactions_update.html'
+    success_url = reverse_lazy('pfinance:transactions_list')
+
+    def get_form_kwargs(self):
+        kwargs = super().get_form_kwargs()
+        kwargs['user'] = self.request.user
+        return kwargs
+
+    def form_valid(self, form):
+        return super().form_valid(form)
+
+
+# Vista para borrar transacciones
+class TransactionDeleteView(LoginRequiredMixin, DeleteView):
+    model = Transaction
+    template_name = 'pfinance/transactions_delete.html'
+    success_url = reverse_lazy('pfinance:transactions_list')
+
+    def delete(self, request, *args, **kwargs):
+        return super().delete(request, *args, **kwargs)
+
+

@@ -5,7 +5,7 @@ from django.core.exceptions import ValidationError
 from django.db import transaction
 from django.utils import timezone
 
-from .models import UserProfile, CURRENCY_CHOICES, Category, Budget
+from .models import UserProfile, CURRENCY_CHOICES, Category, Budget, Transaction
 
 
 class SignUpForm(UserCreationForm):
@@ -171,3 +171,50 @@ class BudgetForm(forms.ModelForm):
                 )
 
         return cleaned_data
+
+
+class TransactionForm(forms.ModelForm):
+    def __init__(self, *args, user=None, **kwargs):
+        super().__init__(*args, **kwargs)
+        if user:
+            self.fields['category'].queryset = Category.objects.all()
+
+        # Configurar el campo de fecha
+        self.fields['date'].widget = forms.DateTimeInput(
+            attrs={
+                'type': 'datetime-local',
+                'class': 'form-control',
+                'max': timezone.now().strftime('%Y-%m-%dT%H:%M')
+            },
+            format='%Y-%m-%dT%H:%M'
+        )
+        self.fields['date'].initial = timezone.now()
+
+    class Meta:
+        model = Transaction
+        fields = ['amount', 'category', 'date', 'description', 'is_expense']
+        widgets = {
+            'amount': forms.NumberInput(attrs={
+                'class': 'form-control',
+                'step': '0.01',
+                'min': '0.01'
+            }),
+            'description': forms.Textarea(attrs={
+                'class': 'form-control',
+                'rows': 3
+            }),
+            'is_expense': forms.RadioSelect(choices=[(True, 'Gasto'), (False, 'Ingreso')])
+        }
+        labels = {
+            'amount': 'Monto',
+            'category': 'Categoría',
+            'date': 'Fecha y hora',
+            'description': 'Asunto',
+            'is_expense': 'Tipo de transacción'
+        }
+
+    def clean_amount(self):
+        amount = self.cleaned_data.get('amount')
+        if amount <= 0:
+            raise forms.ValidationError("El monto debe ser mayor a cero")
+        return amount
