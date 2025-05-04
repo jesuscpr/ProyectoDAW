@@ -121,6 +121,7 @@ class BudgetListView(LoginRequiredMixin, ListView):
     def get_queryset(self):
         return Budget.objects.filter(user=self.request.user).select_related('category')
 
+
 # Vista para crear presupuestos
 class BudgetCreateView(LoginRequiredMixin, CreateView):
     model = Budget
@@ -137,6 +138,7 @@ class BudgetCreateView(LoginRequiredMixin, CreateView):
         form.instance.user = self.request.user
         return super().form_valid(form)
 
+
 # Vista para editar presupuestos
 class BudgetUpdateView(LoginRequiredMixin, UpdateView):
     model = Budget
@@ -152,6 +154,7 @@ class BudgetUpdateView(LoginRequiredMixin, UpdateView):
     def form_valid(self, form):
         messages.success(self.request, "Presupuesto actualizado exitosamente")
         return super().form_valid(form)
+
 
 # Vista para borrar presupuestos
 class BudgetDeleteView(LoginRequiredMixin, DeleteView):
@@ -244,6 +247,5 @@ class TransactionDeleteView(LoginRequiredMixin, DeleteView):
 
     def delete(self, request, *args, **kwargs):
         return super().delete(request, *args, **kwargs)
-
 
 
