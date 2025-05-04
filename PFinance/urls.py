@@ -3,7 +3,7 @@ from django.urls import path
 
 from . import views
 from .views import SignUpView, ProfileUpdateView, ProfileView, BudgetListView, BudgetCreateView, BudgetUpdateView, \
-    BudgetDeleteView
+    BudgetDeleteView, TransactionListView, TransactionCreateView, TransactionUpdateView, TransactionDeleteView
 
 app_name = 'pfinance'
 
@@ -14,9 +14,11 @@ urlpatterns = [
     path('login/', LoginView.as_view(template_name='registration/login.html'), name='login'),
     path('logout/', LogoutView.as_view(template_name='registration/logout.html'), name='logout'),
 
+
     # Perfil
     path('profile/', ProfileView.as_view(), name='profile'),
     path('profile/edit/', ProfileUpdateView.as_view(), name='profile_edit'),
+
 
     # Alertas
     path('alerts/', views.AlertsListView.as_view(), name='alerts'),
@@ -24,7 +26,11 @@ urlpatterns = [
     path('alerts/mark-read/', views.MarkAlertsReadView.as_view(), name='mark_alerts_read'),
 
 
-    # path('transactions/', views.TransactionsView.as_view(), name='transactions'),
+    # Transacciones
+    path('transactions/', TransactionListView.as_view(), name='transactions_list'),
+    path('transactions/create/', TransactionCreateView.as_view(), name='transactions_create'),
+    path('transactions/<int:pk>/update/', TransactionUpdateView.as_view(), name='transactions_update'),
+    path('transactions/<int:pk>/delete/', TransactionDeleteView.as_view(), name='transactions_delete'),
 
 
     # Presupuestos

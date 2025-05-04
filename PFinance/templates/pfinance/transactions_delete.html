@@ -1,0 +1,40 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header bg-danger text-white">
+                    <h4 class="mb-0">Eliminar Transacción</h4>
+                </div>
+                <div class="card-body">
+                    <p>¿Estás seguro que deseas eliminar esta transacción?</p>
+                    <div class="alert alert-warning">
+                        <strong>Tipo:</strong> 
+                        {% if object.is_expense %}Gasto{% else %}Ingreso{% endif %}<br>
+                        <strong>Monto:</strong> 
+                        {{ object.amount }} {{ request.user.profile.currency }}<br>
+                        <strong>Fecha:</strong> {{ object.date|date:"d/m/Y H:i" }}<br>
+                        {% if object.category %}
+                        <strong>Categoría:</strong> {{ object.category.name }}
+                        {% endif %}
+                    </div>
+                    
+                    <form method="post">
+                        {% csrf_token %}
+                        <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                            <a href="{% url 'pfinance:transactions_list' %}" class="btn btn-secondary me-md-2">
+                                <i class="bi bi-x-circle me-1"></i> Cancelar
+                            </a>
+                            <button type="submit" class="btn btn-danger">
+                                <i class="bi bi-trash me-1"></i> Confirmar Eliminación
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
