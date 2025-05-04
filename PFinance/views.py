@@ -8,12 +8,13 @@ from django.http import JsonResponse
 from django.urls import reverse_lazy
 from django.utils.decorators import method_decorator
 from django.views.decorators.http import require_POST
-from django.views.generic import TemplateView, CreateView, UpdateView, DetailView
+from django.views.generic import TemplateView, CreateView, UpdateView, DetailView, DeleteView, ListView
 
-from PFinance.forms import SignUpForm, ProfileEditForm
-from PFinance.models import UserProfile, Alert
+from PFinance.forms import SignUpForm, ProfileEditForm, BudgetForm
+from PFinance.models import UserProfile, Alert, Budget
 
 
+# Vista para el panel
 class DashboardView(LoginRequiredMixin, TemplateView):
     model = UserProfile
     template_name = 'pfinance/dashboard.html'
@@ -39,6 +40,8 @@ class DashboardView(LoginRequiredMixin, TemplateView):
         
         return context
 
+
+# Vista de registro
 class SignUpView(CreateView):
     form_class = SignUpForm
     success_url = reverse_lazy('pfinance:dashboard')
@@ -50,6 +53,7 @@ class SignUpView(CreateView):
         return response
 
 
+# Vista para ver los detalles del perfil
 class ProfileView(LoginRequiredMixin, DetailView):
     model = UserProfile
     template_name = 'pfinance/profile_detail.html'
@@ -59,6 +63,7 @@ class ProfileView(LoginRequiredMixin, DetailView):
         return self.request.user.profile
 
 
+# Vista para editar el perfil
 class ProfileUpdateView(LoginRequiredMixin, UpdateView):
     model = UserProfile
     form_class = ProfileEditForm
@@ -84,7 +89,7 @@ class AlertsListView(LoginRequiredMixin, TemplateView):
         return context
 
 
-# Vista para detalle de alerta
+# Vista para los detalles de las alertas
 class AlertDetailView(LoginRequiredMixin, TemplateView):
     template_name = 'pfinance/alerts_detail.html'
 
@@ -105,3 +110,52 @@ class MarkAlertsReadView(TemplateView):
     def post(self, request, *args, **kwargs):
         updated = request.user.alerts.filter(read=False).update(read=True)
         return JsonResponse({'status': 'success', 'updated': updated})
+
+
+# Vistas para los presupuestos
+class BudgetListView(LoginRequiredMixin, ListView):
+    model = Budget
+    template_name = 'pfinance/budgets_list.html'
+    context_object_name = 'budgets'
+
+    def get_queryset(self):
+        return Budget.objects.filter(user=self.request.user).select_related('category')
+
+class BudgetCreateView(LoginRequiredMixin, CreateView):
+    model = Budget
+    form_class = BudgetForm
+    template_name = 'pfinance/budgets_create.html'
+    success_url = reverse_lazy('pfinance:budgets_list')
+
+    def get_form_kwargs(self):
+        kwargs = super().get_form_kwargs()
+        kwargs['user'] = self.request.user
+        return kwargs
+
+    def form_valid(self, form):
+        form.instance.user = self.request.user
+        return super().form_valid(form)
+
+class BudgetUpdateView(LoginRequiredMixin, UpdateView):
+    model = Budget
+    form_class = BudgetForm
+    template_name = 'pfinance/budgets_update.html'
+    success_url = reverse_lazy('pfinance:budgets_list')
+
+    def get_form_kwargs(self):
+        kwargs = super().get_form_kwargs()
+        kwargs['user'] = self.request.user
+        return kwargs
+
+    def form_valid(self, form):
+        messages.success(self.request, "Presupuesto actualizado exitosamente")
+        return super().form_valid(form)
+
+class BudgetDeleteView(LoginRequiredMixin, DeleteView):
+    model = Budget
+    template_name = 'pfinance/budgets_delete.html'
+    success_url = reverse_lazy('pfinance:budgets_list')
+
+    def delete(self, request, *args, **kwargs):
+        messages.success(request, "Presupuesto eliminado exitosamente")
+        return super().delete(request, *args, **kwargs)

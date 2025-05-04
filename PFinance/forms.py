@@ -3,8 +3,10 @@ from django.contrib.auth.forms import UserCreationForm
 from django.contrib.auth.models import User
 from django.core.exceptions import ValidationError
 from django.db import transaction
+from django.utils import timezone
 
-from .models import UserProfile, CURRENCY_CHOICES
+from .models import UserProfile, CURRENCY_CHOICES, Category, Budget
+
 
 class SignUpForm(UserCreationForm):
     monthly_income = forms.DecimalField(
@@ -114,3 +116,58 @@ class ProfileEditForm(forms.ModelForm):
         if income and income < 0:
             raise forms.ValidationError("El ingreso no puede ser negativo")
         return income
+
+
+class BudgetForm(forms.ModelForm):
+    def __init__(self, *args, user=None, **kwargs):
+        self.user = user  # Guardamos el usuario como atributo del formulario
+        super().__init__(*args, **kwargs)
+        if user:
+            self.fields['category'].queryset = Category.objects.all()
+
+    class Meta:
+        model = Budget
+        fields = ['category', 'amount', 'frequency', 'is_active']
+        widgets = {
+            'amount': forms.NumberInput(attrs={
+                'class': 'form-control',
+                'step': '0.01',
+                'min': '0.01'
+            }),
+            'frequency': forms.Select(attrs={
+                'class': 'form-select'
+            }),
+            'is_active': forms.CheckboxInput(attrs={
+                'class': 'form-check-input'
+            })
+        }
+        labels = {
+            'category': 'Categoría',
+            'amount': 'Monto presupuestado',
+            'frequency': 'Frecuencia',
+            'is_active': 'Presupuesto activo'
+        }
+
+    def clean(self):
+        cleaned_data = super().clean()
+        category = cleaned_data.get('category')
+        frequency = cleaned_data.get('frequency')
+
+        user = getattr(self.instance, 'user', None) or self.user
+
+        if category and frequency and user:
+            # Verificar si ya existe un presupuesto para esta categoría y frecuencia
+            queryset = Budget.objects.filter(
+                user=user,
+                category=category,
+                frequency=frequency
+            )
+            if self.instance:
+                queryset = queryset.exclude(pk=self.instance.pk)
+
+            if queryset.exists():
+                raise forms.ValidationError(
+                    f"Ya existe un presupuesto {frequency.lower()} para esta categoría"
+                )
+
+        return cleaned_data

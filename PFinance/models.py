@@ -56,11 +56,19 @@ class Transaction(models.Model):
 
 class Budget(models.Model):
     """Presupuestos por categoría"""
+
+    FREQUENCY_CHOICES = [
+        ('daily', 'Diario'),
+        ('weekly', 'Semanal'),
+        ('monthly', 'Mensual'),
+        ('quarterly', 'Trimestral'),
+        ('yearly', 'Anual'),
+    ]
+
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='budgets')
     category = models.ForeignKey(Category, on_delete=models.CASCADE, related_name='budgets')
     amount = models.DecimalField(max_digits=10, decimal_places=2, validators=[MinValueValidator(0.01)])
-    start_date = models.DateField(default=timezone.now)
-    end_date = models.DateField(null=True, blank=True)  # Null significa presupuesto recurrente
+    frequency = models.CharField( max_length=10, choices=FREQUENCY_CHOICES, default='MENSUAL')
     is_active = models.BooleanField(default=True)
 
     def __str__(self):

@@ -2,7 +2,8 @@ from django.contrib.auth.views import LoginView, LogoutView
 from django.urls import path
 
 from . import views
-from .views import SignUpView, ProfileUpdateView, ProfileView
+from .views import SignUpView, ProfileUpdateView, ProfileView, BudgetListView, BudgetCreateView, BudgetUpdateView, \
+    BudgetDeleteView
 
 app_name = 'pfinance'
 
@@ -24,6 +25,14 @@ urlpatterns = [
 
 
     # path('transactions/', views.TransactionsView.as_view(), name='transactions'),
-    # path('budgets/', views.BudgetsView.as_view(), name='budgets'),
+
+
+    # Presupuestos
+    path('budgets/', BudgetListView.as_view(), name='budgets_list'),
+    path('budgets/create/', BudgetCreateView.as_view(), name='budgets_create'),
+    path('budgets/<int:pk>/update/', BudgetUpdateView.as_view(), name='budgets_update'),
+    path('budgets/<int:pk>/delete/', BudgetDeleteView.as_view(), name='budgets_delete'),
+
+
     # path('recurring-payments/', views.RecurringPaymentsView.as_view(), name='recurring_payments'),
 ]
