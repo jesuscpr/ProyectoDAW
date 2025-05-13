@@ -4,6 +4,7 @@ from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.auth.models import User
 from django.db.models import Count, Prefetch, Q, Sum
+from django.db.models.sql import UpdateQuery
 from django.http import JsonResponse
 from django.urls import reverse_lazy
 from django.utils.decorators import method_decorator
@@ -18,27 +19,6 @@ from PFinance.models import UserProfile, Alert, Budget, Transaction
 class DashboardView(LoginRequiredMixin, TemplateView):
     model = UserProfile
     template_name = 'pfinance/dashboard.html'
-
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        user = self.request.user
-
-        # Optimización con prefetch_related y annotate
-        user_with_alerts = User.objects.filter(pk=user.pk).prefetch_related(
-            Prefetch(
-                'alerts',
-                queryset=Alert.objects.order_by('-created_at')[:5],  # Solo las 5 más recientes
-                to_attr='recent_alerts'
-            )
-        ).annotate(
-            unread_count=Count('alerts', filter=Q(alerts__read=False))
-        ).first()
-
-        context["usuario"] = user_with_alerts.profile
-        context['unread_count'] = user_with_alerts.unread_count
-        context['recent_alerts'] = user_with_alerts.recent_alerts
-        
-        return context
 
 
 # Vista de registro
@@ -97,16 +77,28 @@ class AlertDetailView(LoginRequiredMixin, TemplateView):
         context = super().get_context_data(**kwargs)
         alert_id = self.kwargs.get('alert_id')
         alert = self.request.user.alerts.get(id=alert_id)
+        transactions = alert.transactions.all()
         if not alert.read:
             alert.read = True
             alert.save(update_fields=['read'])
         context['alert'] = alert
+        context['transactions'] = transactions
         return context
+
+
+# Vista para eliminar la alerta
+class AlertDeleteView(LoginRequiredMixin, DeleteView):
+    model = Alert
+    template_name = 'pfinance/alerts_delete.html'
+    success_url = reverse_lazy('pfinance:alerts')
+
+    def delete(self, request, *args, **kwargs):
+        return super().delete(request, *args, **kwargs)
 
 
 # Vista para marcar alertas como leídas (API)
 @method_decorator([login_required, require_POST], name='dispatch')
-class MarkAlertsReadView(TemplateView):
+class MarkAlertsReadView(LoginRequiredMixin, UpdateView):
     def post(self, request, *args, **kwargs):
         updated = request.user.alerts.filter(read=False).update(read=True)
         return JsonResponse({'status': 'success', 'updated': updated})

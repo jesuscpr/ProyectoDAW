@@ -1,8 +1,9 @@
+{% load static %}
 <header class="navbar navbar-expand-lg sticky-top">
     <div class="container-fluid">
         <!-- Logo/Botón Dashboard -->
-        <a class="navbar-brand d-flex align-items-center me-auto" href="{% url 'pfinance:dashboard' %}">
-            <span class="d-none d-sm-inline">PFinance</span>
+        <a class="navbar-brand d-flex align-items-center me-auto p-0" href="{% url 'pfinance:dashboard' %}">
+            <img alt="logo" src="{% static 'logo.png' %}" width="50rem">
         </a>
 
         <!-- Botón Hamburguesa -->
@@ -49,7 +50,7 @@
                         <a class="nav-link position-relative" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false" id="alertsDropdown">
                             <i class="bi bi-bell-fill"></i>
                             {% if unread_count > 0 %}
-                                <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger" style="font-size: 0.6em;">
+                                <span class="position-absolute top-4 start-99 translate-middle badge rounded-pill bg-danger" style="font-size: 0.6em;">
                                         {{ unread_count }}
                                     </span>
                             {% endif %}
