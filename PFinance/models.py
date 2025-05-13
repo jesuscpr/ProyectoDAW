@@ -1,3 +1,4 @@
+from django.core.exceptions import ValidationError
 from django.db import models
 from django.contrib.auth.models import User
 from django.utils import timezone
@@ -58,10 +59,7 @@ class Budget(models.Model):
     """Presupuestos por categoría"""
 
     FREQUENCY_CHOICES = [
-        ('daily', 'Diario'),
-        ('weekly', 'Semanal'),
         ('monthly', 'Mensual'),
-        ('quarterly', 'Trimestral'),
         ('yearly', 'Anual'),
     ]
 
@@ -70,6 +68,16 @@ class Budget(models.Model):
     amount = models.DecimalField(max_digits=10, decimal_places=2, validators=[MinValueValidator(0.01)])
     frequency = models.CharField( max_length=10, choices=FREQUENCY_CHOICES, default='MENSUAL')
     is_active = models.BooleanField(default=True)
+
+    def spent_amount(self):
+        return Transaction.objects.filter(
+            user=self.user,
+            category=self.category,
+            is_expense=True
+        ).aggregate(total=models.Sum('amount'))['total'] or 0
+
+    def remaining_amount(self):
+        return self.amount - self.spent_amount()
 
     def __str__(self):
         return f"Presupuesto: {self.category.name} - {self.amount}"
@@ -85,15 +93,16 @@ class RecurringPayment(models.Model):
     end_date = models.DateField(null=True, blank=True)  # Null significa indefinido
 
     FREQUENCY_CHOICES = [
-        ('daily', 'Diario'),
-        ('weekly', 'Semanal'),
         ('monthly', 'Mensual'),
-        ('quarterly', 'Trimestral'),
         ('yearly', 'Anual'),
     ]
     frequency = models.CharField(max_length=10, choices=FREQUENCY_CHOICES, default='monthly')
     next_due_date = models.DateField()
     reminder_days = models.PositiveSmallIntegerField(default=3)  # Días antes para recordatorio
+
+    def clean(self):
+        if self.end_date and self.end_date < self.start_date:
+            raise ValidationError("La fecha de fin debe ser posterior a la de inicio")
 
     def __str__(self):
         return f"{self.name} ({self.amount} - {self.get_frequency_display()})"
@@ -115,8 +124,20 @@ class Alert(models.Model):
     ]
     alert_type = models.CharField(max_length=10, choices=ALERT_TYPES)
 
+    transactions = models.ManyToManyField(Transaction, related_name='alerts')
+
+    def get_related_transactions(self):
+        return self.transactions.all().order_by('-date')
+
+    def delete_if_empty(self):
+        """Elimina la alerta si no tiene transacciones"""
+        if self.transactions.count() == 0:
+            self.delete()
+
+
     def __str__(self):
         return f"{self.alert_type}: {self.title}"
 
     class Meta:
         ordering = ['-created_at']
+

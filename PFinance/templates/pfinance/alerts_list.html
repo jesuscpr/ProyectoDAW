@@ -14,15 +14,22 @@
                     <div class="alert {% if not alert.read %}alert-info{% else %}alert-light{% endif %} mb-3">
                         <div class="d-flex justify-content-between">
                             <h5>
-                                <i class="bi bi-{% if alert.alert_type == 'budget' %}pie-chart-fill{% elif alert.alert_type == 'payment' %}calendar-check{% elif alert.alert_type == 'goal' %}trophy{% else %}info-circle{% endif %} me-2"></i>
+                                <i class="bi bi-{% if alert.alert_type == 'budget' %}graph-down-arrow{% elif alert.alert_type == 'payment' %}calendar-check{% elif alert.alert_type == 'goal' %}trophy{% else %}info-circle{% endif %} me-2"></i>
                                 {{ alert.title }}
                             </h5>
-                            <span class="badge bg-secondary">{{ alert.get_alert_type_display }}</span>
+                            <a href="{% url 'pfinance:mark_alerts_read' %}" class="btn btn-md btn-outline-secondary">
+                                <i class="bi bi-check-all"></i> Marcar como leído
+                            </a>
                         </div>
                         <p>{{ alert.message }}</p>
                         <div class="d-flex justify-content-between">
                             <small class="text-muted">{{ alert.created_at }}</small>
-                            <a href="{% url 'pfinance:alert_detail' alert.id %}" class="btn btn-sm btn-outline-primary">Ver detalles</a>
+                            <div>
+                                <a href="{% url 'pfinance:alert_detail' alert.id %}" class="btn btn-md btn-outline-primary">Ver detalles</a>
+                                <a href="{% url 'pfinance:alert_delete' alert.id %}" class="btn btn-md btn-outline-danger">
+                                    <i class="bi bi-trash"></i>
+                                </a>
+                            </div>
                         </div>
                     </div>
                     {% empty %}
