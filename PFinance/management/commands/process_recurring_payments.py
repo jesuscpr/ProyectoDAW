@@ -29,7 +29,7 @@ class Command(BaseCommand):
             self.stdout.write(self.style.SUCCESS("No hay pagos pendientes para procesar"))
             return
 
-        self.stdout.write(f"\n💸 Procesando pagos vencidos ({payments.count()}):")
+        self.stdout.write(f"\nProcesando pagos vencidos ({payments.count()}):")
 
         success_count = 0
         for payment in payments:
@@ -37,12 +37,12 @@ class Command(BaseCommand):
                 transaction = payment.process_payment()
                 if transaction:
                     self.stdout.write(
-                        f"✔️ Transacción #{transaction.id} para {payment.name} "
+                        f"Transacción #{transaction.id} para {payment.name} "
                         f"(Monto: {payment.amount}, Próximo pago: {payment.next_due_date})"
                     )
                     success_count += 1
             except Exception as e:
-                self.stdout.write(self.style.ERROR(f"❌ Error con {payment.name}: {str(e)}"))
+                self.stdout.write(self.style.ERROR(f"Error con {payment.name}: {str(e)}"))
 
         self.stdout.write(self.style.SUCCESS(f"Transacciones creadas: {success_count}"))
 
@@ -54,7 +54,7 @@ class Command(BaseCommand):
         ).select_related('user')
 
         alert_count = 0
-        self.stdout.write(f"\n🔔 Buscando pagos para recordatorio (reminder_days):")
+        self.stdout.write(f"\nBuscando pagos para recordatorio (reminder_days):")
 
         for payment in upcoming_payments:
             reminder_date = payment.next_due_date - timedelta(days=payment.reminder_days)
@@ -71,15 +71,15 @@ class Command(BaseCommand):
                         alert_type='payment'
                     )
                     self.stdout.write(
-                        f"✉️ Alerta creada para {payment.name} "
+                        f"Alerta creada para {payment.name} "
                         f"(Vence: {payment.next_due_date}, "
                         f"Recordatorio configurado: {payment.reminder_days} días antes)"
                     )
                     alert_count += 1
                 except Exception as e:
-                    self.stdout.write(self.style.ERROR(f"❌ Error al crear alerta para {payment.name}: {str(e)}"))
+                    self.stdout.write(self.style.ERROR(f"Error al crear alerta para {payment.name}: {str(e)}"))
 
         self.stdout.write(self.style.SUCCESS(f"Alertas creadas: {alert_count}"))
         self.stdout.write("\n" + "=" * 50)
-        self.stdout.write("✅ Proceso completado")
+        self.stdout.write("Proceso completado")
         self.stdout.write("=" * 50)
