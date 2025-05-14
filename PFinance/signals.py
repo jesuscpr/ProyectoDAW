@@ -9,6 +9,7 @@ from datetime import timedelta
 from decimal import Decimal
 
 
+
 # Alertas para presupuestos cuando se guarda una transaccion
 @receiver(post_save, sender=Transaction)
 def create_budget_alert(sender, instance, created, **kwargs):
