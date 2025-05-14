@@ -1,3 +1,5 @@
+from datetime import date
+
 from django.core.exceptions import ValidationError
 from django.db import models
 from django.contrib.auth.models import User
@@ -90,7 +92,7 @@ class RecurringPayment(models.Model):
     amount = models.DecimalField(max_digits=10, decimal_places=2)
     category = models.ForeignKey(Category, on_delete=models.SET_NULL, null=True)
     start_date = models.DateField()
-    end_date = models.DateField(null=True, blank=True)  # Null significa indefinido
+    end_date = models.DateField(null=True, blank=True)
 
     FREQUENCY_CHOICES = [
         ('monthly', 'Mensual'),
@@ -100,12 +102,104 @@ class RecurringPayment(models.Model):
     next_due_date = models.DateField()
     reminder_days = models.PositiveSmallIntegerField(default=3)  # Días antes para recordatorio
 
-    def clean(self):
-        if self.end_date and self.end_date < self.start_date:
-            raise ValidationError("La fecha de fin debe ser posterior a la de inicio")
+    is_active = models.BooleanField(default=True, verbose_name="Activo")
+
+    class Meta:
+        verbose_name = "Pago recurrente"
+        verbose_name_plural = "Pagos recurrentes"
+        ordering = ['next_due_date']
 
     def __str__(self):
         return f"{self.name} ({self.amount} - {self.get_frequency_display()})"
+
+    def clean(self):
+        """Validaciones de fechas"""
+        errors = {}
+
+        if self.end_date and self.end_date < self.start_date:
+            errors['end_date'] = "La fecha de fin debe ser posterior a la de inicio"
+
+        if self.next_due_date < self.start_date:
+            errors['next_due_date'] = "La próxima fecha de pago no puede ser anterior a la fecha de inicio"
+
+        if errors:
+            raise ValidationError(errors)
+
+    def _days_in_month(self, year, month):
+        """Devuelve el número de días en un mes específico"""
+        if month == 12:
+            return 31
+        return (date(year, month + 1, 1) - date(year, month, 1)).days
+
+    def _add_months(self, source_date, months):
+        """Añade meses a una fecha manteniendo el día máximo válido"""
+        year = source_date.year + (months // 12)
+        month = source_date.month + (months % 12)
+
+        if month > 12:
+            month -= 12
+            year += 1
+
+        day = min(source_date.day, self._days_in_month(year, month))
+        return date(year, month, day)
+
+    def update_next_due_date(self):
+        """Calcula la nueva fecha de pago según la frecuencia"""
+        if self.frequency == 'monthly':
+            self.next_due_date = self._add_months(self.next_due_date, 1)
+        else:  # yearly
+            try:
+                # Intenta mantener el mismo día/mes
+                self.next_due_date = self.next_due_date.replace(year=self.next_due_date.year + 1)
+            except ValueError:
+                # Para años bisiestos (29 de febrero)
+                self.next_due_date = date(self.next_due_date.year + 1, 3, 1)
+
+        # Desactiva si superó la fecha final
+        if self.end_date and self.next_due_date > self.end_date:
+            self.is_active = False
+
+        self.save()
+
+    def create_transaction(self):
+        """Crea una transacción asociada al pago recurrente"""
+        return Transaction.objects.create(
+            user=self.user,
+            amount=self.amount,
+            category=self.category,
+            date=date.today(),
+            description=f"Pago recurrente: {self.name}",
+            is_expense=True
+        )
+
+    def process_payment(self):
+        """Ejecuta el pago si está vencido y activo"""
+        if date.today() >= self.next_due_date and self.is_active:
+            transaction = self.create_transaction()
+            self.update_next_due_date()
+
+            # Opcional: Crear alerta
+            Alert.objects.create(
+                user=self.user,
+                title=f"Pago automático: {self.name}",
+                message=f"Se ha procesado el pago de {self.amount}",
+                alert_type='payment'
+            )
+
+            return transaction
+        return None
+
+    @classmethod
+    def process_due_payments(cls):
+        """Procesa todos los pagos vencidos (para el comando)"""
+        return [
+            payment.process_payment()
+            for payment in cls.objects.filter(
+                next_due_date__lte=date.today(),
+                is_active=True
+            ).select_related('user', 'category')
+            if payment.process_payment() is not None
+        ]
 
 
 class Alert(models.Model):
