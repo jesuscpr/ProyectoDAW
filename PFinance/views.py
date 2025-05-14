@@ -12,8 +12,8 @@ from django.utils.decorators import method_decorator
 from django.views.decorators.http import require_POST
 from django.views.generic import TemplateView, CreateView, UpdateView, DetailView, DeleteView, ListView, View
 
-from PFinance.forms import SignUpForm, ProfileEditForm, BudgetForm, TransactionForm
-from PFinance.models import UserProfile, Alert, Budget, Transaction
+from PFinance.forms import SignUpForm, ProfileEditForm, BudgetForm, TransactionForm, RecurringPaymentForm
+from PFinance.models import UserProfile, Alert, Budget, Transaction, RecurringPayment
 
 
 # Vista para el panel
@@ -135,23 +135,6 @@ class BudgetCreateView(LoginRequiredMixin, CreateView):
         return super().form_valid(form)
 
 
-# Vista para editar presupuestos
-class BudgetUpdateView(LoginRequiredMixin, UpdateView):
-    model = Budget
-    form_class = BudgetForm
-    template_name = 'pfinance/budgets_update.html'
-    success_url = reverse_lazy('pfinance:budgets_list')
-
-    def get_form_kwargs(self):
-        kwargs = super().get_form_kwargs()
-        kwargs['user'] = self.request.user
-        return kwargs
-
-    def form_valid(self, form):
-        messages.success(self.request, "Presupuesto actualizado exitosamente")
-        return super().form_valid(form)
-
-
 # Vista para borrar presupuestos
 class BudgetDeleteView(LoginRequiredMixin, DeleteView):
     model = Budget
@@ -245,3 +228,41 @@ class TransactionDeleteView(LoginRequiredMixin, DeleteView):
         return super().delete(request, *args, **kwargs)
 
 
+class RecurringPaymentListView(LoginRequiredMixin, ListView):
+    model = RecurringPayment
+    template_name = 'pfinance/recurring_payments_list.html'
+    context_object_name = 'payments'
+
+    def get_queryset(self):
+        return self.request.user.recurring_payments.select_related('category').order_by('next_due_date')
+
+class RecurringPaymentCreateView(LoginRequiredMixin, CreateView):
+    model = RecurringPayment
+    form_class = RecurringPaymentForm
+    template_name = 'pfinance/recurring_payments_create.html'
+    success_url = reverse_lazy('pfinance:recurring_payments')
+
+    def form_valid(self, form):
+        form.instance.user = self.request.user
+        response = super().form_valid(form)
+        messages.success(self.request, f"Pago recurrente '{self.object.name}' creado exitosamente")
+        return response
+
+    def get_form_kwargs(self):
+        kwargs = super().get_form_kwargs()
+        kwargs['user'] = self.request.user
+        return kwargs
+
+class RecurringPaymentDeleteView(LoginRequiredMixin, DeleteView):
+    model = RecurringPayment
+    template_name = 'pfinance/recurring_payments_delete.html'
+    success_url = reverse_lazy('pfinance:recurring_payments')
+    context_object_name = 'payment'
+
+    def get_queryset(self):
+        return self.request.user.recurring_payments
+
+    def delete(self, request, *args, **kwargs):
+        response = super().delete(request, *args, **kwargs)
+        messages.success(request, f"Pago recurrente '{self.object.name}' eliminado exitosamente")
+        return response

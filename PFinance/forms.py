@@ -5,7 +5,7 @@ from django.core.exceptions import ValidationError
 from django.db import transaction
 from django.utils import timezone
 
-from .models import UserProfile, CURRENCY_CHOICES, Category, Budget, Transaction
+from .models import UserProfile, CURRENCY_CHOICES, Category, Budget, Transaction, RecurringPayment
 
 
 class SignUpForm(UserCreationForm):
@@ -218,3 +218,35 @@ class TransactionForm(forms.ModelForm):
         if amount <= 0:
             raise forms.ValidationError("El monto debe ser mayor a cero")
         return amount
+
+
+class RecurringPaymentForm(forms.ModelForm):
+    class Meta:
+        model = RecurringPayment
+        fields = ['name', 'amount', 'category', 'start_date',
+                  'end_date', 'frequency', 'next_due_date', 'reminder_days']
+        widgets = {
+            'start_date': forms.DateInput(attrs={'type': 'date'}),
+            'end_date': forms.DateInput(attrs={'type': 'date'}),
+            'next_due_date': forms.DateInput(attrs={'type': 'date'}),
+        }
+
+    def __init__(self, *args, **kwargs):
+        self.user = kwargs.pop('user', None)
+        super().__init__(*args, **kwargs)
+
+    def clean(self):
+        cleaned_data = super().clean()
+        start_date = cleaned_data.get('start_date')
+        end_date = cleaned_data.get('end_date')
+        next_due_date = cleaned_data.get('next_due_date')
+
+        if end_date and start_date and end_date < start_date:
+            raise ValidationError("La fecha de fin debe ser posterior a la de inicio")
+
+        if next_due_date and start_date and next_due_date < start_date:
+            raise ValidationError("La próxima fecha de pago no puede ser anterior a la fecha de inicio")
+
+        return cleaned_data
+
+
