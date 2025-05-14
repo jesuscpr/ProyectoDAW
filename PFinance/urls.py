@@ -23,7 +23,7 @@ urlpatterns = [
     # Alertas
     path('alerts/', views.AlertsListView.as_view(), name='alerts'),
     path('alerts/<int:alert_id>/', views.AlertDetailView.as_view(), name='alert_detail'),
-    path('alerts/mark-read/', views.MarkAlertsReadView.as_view(), name='mark_alerts_read'),
+    path('alerts/<int:pk>/mark-read/', views.MarkAlertReadView.as_view(), name='mark_alerts_read'),
     path('alerts/<int:pk>/delete/', views.AlertDeleteView.as_view(), name='alert_delete'),
 
 

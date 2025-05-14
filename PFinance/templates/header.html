@@ -50,7 +50,7 @@
                         <a class="nav-link position-relative" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false" id="alertsDropdown">
                             <i class="bi bi-bell-fill"></i>
                             {% if unread_count > 0 %}
-                                <span class="position-absolute top-4 start-99 translate-middle badge rounded-pill bg-danger" style="font-size: 0.6em;">
+                                <span class="position-absolute top-4 start-99 translate-middle badge rounded-pill bg-primary" style="font-size: 0.6em;">
                                         {{ unread_count }}
                                     </span>
                             {% endif %}
@@ -61,26 +61,33 @@
                             
                             {% if recent_alerts %}
                                 {% for alert in recent_alerts %}
-                                    <li>
-                                        <a class="dropdown-item {% if not alert.read %}unread-alert{% endif %}" href="{% url 'pfinance:alert_detail' alert.id %}">
-                                            <div class="d-flex align-items-start">
-                                                <i class="bi bi-{% if alert.alert_type == 'budget' %}pie-chart-fill text-primary{% elif alert.alert_type == 'payment' %}calendar-check-fill text-warning{% elif alert.alert_type == 'goal' %}trophy-fill text-success{% else %}info-circle-fill text-info{% endif %} me-2 mt-1"></i>
-                                                <div>
-                                                    <div class="fw-semibold">{{ alert.title }}</div>
-                                                    <small class="text-muted">{{ alert.get_alert_type_display }}</small>
-                                                    <div class="small text-muted mt-1">{{ alert.created_at|timesince }} atrás</div>
+                                    {% if not alert.read %}
+                                        <li>
+                                            <a class="dropdown-item unread-alert" href="{% url 'pfinance:alert_detail' alert.id %}">
+                                                <div class="d-flex align-items-start">
+                                                    <i class="bi bi-{% if alert.alert_type == 'budget' %}graph-down-arrow text-primary{% elif alert.alert_type == 'payment' %}calendar-check-fill text-warning{% elif alert.alert_type == 'goal' %}trophy-fill text-success{% else %}info-circle-fill text-info{% endif %} me-2 mt-1"></i>
+                                                    <div>
+                                                        <div class="fw-semibold">{{ alert.title }}</div>
+                                                        <small class="text-muted">{{ alert.get_alert_type_display }}</small>
+                                                        <div class="small text-muted mt-1">{{ alert.created_at|timesince }} atrás</div>
+                                                    </div>
                                                 </div>
-                                            </div>
-                                        </a>
-                                    </li>
+                                            </a>
+                                        </li>
+                                    {% endif %}
                                 {% endfor %}
+                                {% if unread_count < 1 %}
+                                    <li class="px-3 py-3 text-center text-muted">
+                                    <i class="bi bi-bell-slash-fill d-block mb-2" style="font-size: 1.5rem;"></i>
+                                    No tienes alertas nuevas
+                                </li>
+                                {% endif %}
                             {% else %}
                                 <li class="px-3 py-3 text-center text-muted">
                                     <i class="bi bi-bell-slash-fill d-block mb-2" style="font-size: 1.5rem;"></i>
                                     No tienes alertas
                                 </li>
                             {% endif %}
-                            
                             <li><hr class="dropdown-divider mx-3"></li>
                             <li>
                                 <a class="dropdown-item text-center" href="{% url 'pfinance:alerts' %}">

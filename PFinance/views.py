@@ -6,10 +6,11 @@ from django.contrib.auth.models import User
 from django.db.models import Count, Prefetch, Q, Sum
 from django.db.models.sql import UpdateQuery
 from django.http import JsonResponse
+from django.shortcuts import get_object_or_404, redirect
 from django.urls import reverse_lazy
 from django.utils.decorators import method_decorator
 from django.views.decorators.http import require_POST
-from django.views.generic import TemplateView, CreateView, UpdateView, DetailView, DeleteView, ListView
+from django.views.generic import TemplateView, CreateView, UpdateView, DetailView, DeleteView, ListView, View
 
 from PFinance.forms import SignUpForm, ProfileEditForm, BudgetForm, TransactionForm
 from PFinance.models import UserProfile, Alert, Budget, Transaction
@@ -96,12 +97,15 @@ class AlertDeleteView(LoginRequiredMixin, DeleteView):
         return super().delete(request, *args, **kwargs)
 
 
-# Vista para marcar alertas como leídas (API)
-@method_decorator([login_required, require_POST], name='dispatch')
-class MarkAlertsReadView(LoginRequiredMixin, UpdateView):
+# Vista para marcar alertas como leídas
+class MarkAlertReadView(LoginRequiredMixin, View):
     def post(self, request, *args, **kwargs):
-        updated = request.user.alerts.filter(read=False).update(read=True)
-        return JsonResponse({'status': 'success', 'updated': updated})
+        alert_id = kwargs.get('pk')
+        alert = get_object_or_404(Alert, pk=alert_id, user=request.user)
+        if not alert.read:
+            alert.read = True
+            alert.save()
+        return redirect('pfinance:alerts')
 
 
 # Vista para la lista de presupuestos

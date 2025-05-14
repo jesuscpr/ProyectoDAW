@@ -9,7 +9,8 @@ from datetime import timedelta
 from decimal import Decimal
 
 
-# Alertas para presupuestos
+
+# Alertas para presupuestos cuando se guarda una transaccion
 @receiver(post_save, sender=Transaction)
 def create_budget_alert(sender, instance, created, **kwargs):
     """
@@ -59,19 +60,34 @@ def create_budget_alert(sender, instance, created, **kwargs):
     if spent < threshold:
         return
 
-    # Buscamos o creamos la alerta
-    alert, created = Alert.objects.get_or_create(
-        user=instance.user,
-        alert_type='budget',
-        title=f"Presupuesto al límite: {budget.category.name}",
-        defaults={
-            'message': (
-                f"Has gastado {spent:.2f}{budget.user.profile.currency} "
-                f"({(spent / budget.amount) * 100:.1f}%) "
-                f"del presupuesto {period_description}"
-            )
-        }
-    )
+    # Verificamos si supera el 100% del presupuesto
+    if spent > budget.amount:
+        alert, created = Alert.objects.get_or_create(
+            user=instance.user,
+            alert_type='budget',
+            title=f"Presupuesto traspasa el límite: {budget.category.name}",
+            defaults={
+                'message': (
+                    f"Has gastado {spent:.2f}{budget.user.profile.currency} "
+                    f"({(spent / budget.amount) * 100:.1f}%) "
+                    f"del presupuesto {period_description}"
+                )
+            }
+        )
+    else:
+        # Buscamos o creamos la alerta
+        alert, created = Alert.objects.get_or_create(
+            user=instance.user,
+            alert_type='budget',
+            title=f"Presupuesto al límite: {budget.category.name}",
+            defaults={
+                'message': (
+                    f"Has gastado {spent:.2f}{budget.user.profile.currency} "
+                    f"({(spent / budget.amount) * 100:.1f}%) "
+                    f"del presupuesto {period_description}"
+                )
+            }
+        )
 
     # Vinculamos TODAS las transacciones del período
     if created:
