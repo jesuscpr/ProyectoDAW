@@ -244,6 +244,7 @@ class RecurringPaymentForm(forms.ModelForm):
         if end_date and start_date and end_date < start_date:
             raise ValidationError("La fecha de fin debe ser posterior a la de inicio")
 
+
         if next_due_date < start_date:
             raise ValidationError("La próxima fecha de pago no puede ser anterior a la fecha de inicio")
 
