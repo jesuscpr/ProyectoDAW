@@ -2,22 +2,21 @@ from django.contrib.auth.views import LoginView, LogoutView
 from django.urls import path
 
 from . import views
-from .views import SignUpView, ProfileUpdateView, ProfileView, BudgetListView, BudgetCreateView, BudgetUpdateView, \
-    BudgetDeleteView, TransactionListView, TransactionCreateView, TransactionUpdateView, TransactionDeleteView
+
 
 app_name = 'pfinance'
 
 urlpatterns = [
     # Autenticación y dashboard
     path("", views.DashboardView.as_view(), name="dashboard"),
-    path('register/', SignUpView.as_view(template_name='registration/register.html'), name='register'),
+    path('register/', views.SignUpView.as_view(template_name='registration/register.html'), name='register'),
     path('login/', LoginView.as_view(template_name='registration/login.html'), name='login'),
     path('logout/', LogoutView.as_view(template_name='registration/logout.html'), name='logout'),
 
 
     # Perfil
-    path('profile/', ProfileView.as_view(), name='profile'),
-    path('profile/edit/', ProfileUpdateView.as_view(), name='profile_edit'),
+    path('profile/', views.ProfileView.as_view(), name='profile'),
+    path('profile/edit/', views.ProfileUpdateView.as_view(), name='profile_edit'),
 
 
     # Alertas
@@ -28,18 +27,20 @@ urlpatterns = [
 
 
     # Transacciones
-    path('transactions/', TransactionListView.as_view(), name='transactions_list'),
-    path('transactions/create/', TransactionCreateView.as_view(), name='transactions_create'),
-    path('transactions/<int:pk>/update/', TransactionUpdateView.as_view(), name='transactions_update'),
-    path('transactions/<int:pk>/delete/', TransactionDeleteView.as_view(), name='transactions_delete'),
+    path('transactions/', views.TransactionListView.as_view(), name='transactions_list'),
+    path('transactions/create/', views.TransactionCreateView.as_view(), name='transactions_create'),
+    path('transactions/<int:pk>/update/', views.TransactionUpdateView.as_view(), name='transactions_update'),
+    path('transactions/<int:pk>/delete/', views.TransactionDeleteView.as_view(), name='transactions_delete'),
 
 
     # Presupuestos
-    path('budgets/', BudgetListView.as_view(), name='budgets_list'),
-    path('budgets/create/', BudgetCreateView.as_view(), name='budgets_create'),
-    path('budgets/<int:pk>/update/', BudgetUpdateView.as_view(), name='budgets_update'),
-    path('budgets/<int:pk>/delete/', BudgetDeleteView.as_view(), name='budgets_delete'),
+    path('budgets/', views.BudgetListView.as_view(), name='budgets_list'),
+    path('budgets/create/', views.BudgetCreateView.as_view(), name='budgets_create'),
+    path('budgets/<int:pk>/delete/', views.BudgetDeleteView.as_view(), name='budgets_delete'),
 
 
-    # path('recurring-payments/', views.RecurringPaymentsView.as_view(), name='recurring_payments'),
+    # Pagos recurrentes
+    path('recurring-payments/', views.RecurringPaymentListView.as_view(), name='recurring_payments'),
+    path('recurring-payments/create/', views.RecurringPaymentCreateView.as_view(), name='recurring_payment_create'),
+    path('recurring-payments/<int:pk>/delete/', views.RecurringPaymentDeleteView.as_view(), name='recurring_payment_delete'),
 ]
