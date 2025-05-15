@@ -6,13 +6,16 @@
         <div class="card-header">
             <div class="d-flex justify-content-between align-items-center">
                 <h2 class="mb-0">
-                    <i class="bi bi-cash-stack"></i> Mis Transacciones
+                    <i class="bi bi-arrow-left-right"></i> Mis Transacciones
                 </h2>
                 <div>
-                    <a href="{% url 'pfinance:transactions_list' %}?type=expense" class="btn btn-sm btn-outline-light me-2">
+                    <a href="{% url 'pfinance:transactions_list' %}" class="btn btn-sm btn-outline-primary me-2">
+                        <i class="bi bi-cash"></i> Todo
+                    </a>
+                    <a href="{% url 'pfinance:transactions_list' %}?type=expense" class="btn btn-sm btn-outline-danger me-2">
                         <i class="bi bi-arrow-up-circle"></i> Gastos
                     </a>
-                    <a href="{% url 'pfinance:transactions_list' %}?type=income" class="btn btn-sm btn-outline-light me-2">
+                    <a href="{% url 'pfinance:transactions_list' %}?type=income" class="btn btn-sm btn-outline-success me-2">
                         <i class="bi bi-arrow-down-circle"></i> Ingresos
                     </a>
 

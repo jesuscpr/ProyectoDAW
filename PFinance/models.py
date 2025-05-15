@@ -235,3 +235,102 @@ class Alert(models.Model):
     class Meta:
         ordering = ['-created_at']
 
+
+class RecurringIncome(models.Model):
+    FREQUENCY_CHOICES = [
+        ('monthly', 'Mensual'),
+        ('yearly', 'Anual'),
+    ]
+
+    SOURCE_CHOICES = [
+        ('salary', 'Salario'),
+        ('investment', 'Inversión'),
+        ('rental', 'Alquiler'),
+        ('freelance', 'Freelance'),
+        ('other', 'Otro'),
+    ]
+
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='recurring_incomes')
+    name = models.CharField(max_length=200, verbose_name="Nombre del ingreso")
+    amount = models.DecimalField(max_digits=12, decimal_places=2, verbose_name="Monto")
+    source = models.CharField(max_length=20, choices=SOURCE_CHOICES, default='salary', verbose_name="Fuente")
+    category = models.ForeignKey(
+        'Category',
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        limit_choices_to={'is_expense': False},  # Solo categorías de ingresos
+        verbose_name="Categoría"
+    )
+    start_date = models.DateField(verbose_name="Fecha de inicio")
+    end_date = models.DateField(null=True, blank=True, verbose_name="Fecha de finalización")
+    frequency = models.CharField(
+        max_length=10,
+        choices=FREQUENCY_CHOICES,
+        default='monthly',
+        verbose_name="Frecuencia"
+    )
+    next_income_date = models.DateField(verbose_name="Próximo ingreso")
+    is_active = models.BooleanField(default=True, verbose_name="Activo")
+
+    class Meta:
+        verbose_name = "Ingreso recurrente"
+        verbose_name_plural = "Ingresos recurrentes"
+        ordering = ['next_income_date']
+        unique_together = ['user', 'name']  # Evita duplicados
+
+    def __str__(self):
+        return f"{self.name} ({self.amount} - {self.get_frequency_display()})"
+
+    def clean(self):
+        if self.end_date and self.end_date < self.start_date:
+            raise ValidationError("La fecha de fin debe ser posterior a la de inicio")
+
+        if self.next_income_date < self.start_date:
+            raise ValidationError("La próxima fecha de ingreso no puede ser anterior a la fecha de inicio")
+
+    def create_transaction(self):
+        """Crea una transacción de ingreso asociada"""
+        return Transaction.objects.create(
+            user=self.user,
+            amount=self.amount,
+            category=self.category,
+            date=date.today(),
+            description=f"Ingreso recurrente: {self.name}",
+            is_expense=False  # ¡Importante! Diferencia clave vs pagos
+        )
+
+    def update_next_income_date(self):
+        """Calcula la nueva fecha según la frecuencia"""
+        if self.frequency == 'monthly':
+            # Manejo preciso de meses
+            year = self.next_income_date.year
+            month = self.next_income_date.month + 1
+            if month > 12:
+                month = 1
+                year += 1
+            day = min(self.next_income_date.day, self._days_in_month(month, year))
+            self.next_income_date = date(year, month, day)
+        else:  # yearly
+            self.next_income_date = self.next_income_date.replace(year=self.next_income_date.year + 1)
+
+        # Desactiva si superó la fecha final
+        if self.end_date and self.next_income_date > self.end_date:
+            self.is_active = False
+
+        self.save()
+
+    def _days_in_month(self, month, year):
+        """Helper para días en un mes"""
+        if month == 12:
+            return 31
+        return (date(year, month + 1, 1) - date(year, month, 1)).days
+
+    def process_income(self):
+        """Ejecuta el ingreso si está vencido y activo"""
+        if date.today() >= self.next_income_date and self.is_active:
+            transaction = self.create_transaction()
+            self.update_next_income_date()
+            return transaction
+        return None
+
