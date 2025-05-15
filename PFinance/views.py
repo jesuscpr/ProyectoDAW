@@ -1,19 +1,15 @@
 from django.contrib import messages
 from django.contrib.auth import login
-from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin
-from django.contrib.auth.models import User
-from django.db.models import Count, Prefetch, Q, Sum
-from django.db.models.sql import UpdateQuery
-from django.http import JsonResponse
+from django.contrib.messages.views import SuccessMessageMixin
+from django.db.models import Sum
 from django.shortcuts import get_object_or_404, redirect
 from django.urls import reverse_lazy
-from django.utils.decorators import method_decorator
-from django.views.decorators.http import require_POST
 from django.views.generic import TemplateView, CreateView, UpdateView, DetailView, DeleteView, ListView, View
 
-from PFinance.forms import SignUpForm, ProfileEditForm, BudgetForm, TransactionForm, RecurringPaymentForm
-from PFinance.models import UserProfile, Alert, Budget, Transaction, RecurringPayment
+from PFinance.forms import SignUpForm, ProfileEditForm, BudgetForm, TransactionForm, RecurringPaymentForm, \
+    RecurringIncomeForm
+from PFinance.models import UserProfile, Alert, Budget, Transaction, RecurringPayment, RecurringIncome
 
 
 # Vista para el panel
@@ -228,6 +224,7 @@ class TransactionDeleteView(LoginRequiredMixin, DeleteView):
         return super().delete(request, *args, **kwargs)
 
 
+# Vista para la lista de pagos recurrentes
 class RecurringPaymentListView(LoginRequiredMixin, ListView):
     model = RecurringPayment
     template_name = 'pfinance/recurring_payments_list.html'
@@ -236,6 +233,8 @@ class RecurringPaymentListView(LoginRequiredMixin, ListView):
     def get_queryset(self):
         return self.request.user.recurring_payments.select_related('category').order_by('next_due_date')
 
+
+# Vista para crear pagos recurrentes
 class RecurringPaymentCreateView(LoginRequiredMixin, CreateView):
     model = RecurringPayment
     form_class = RecurringPaymentForm
@@ -253,6 +252,8 @@ class RecurringPaymentCreateView(LoginRequiredMixin, CreateView):
         kwargs['user'] = self.request.user
         return kwargs
 
+
+# Vista para eliminar pagos recurrentes
 class RecurringPaymentDeleteView(LoginRequiredMixin, DeleteView):
     model = RecurringPayment
     template_name = 'pfinance/recurring_payments_delete.html'
@@ -266,3 +267,45 @@ class RecurringPaymentDeleteView(LoginRequiredMixin, DeleteView):
         response = super().delete(request, *args, **kwargs)
         messages.success(request, f"Pago recurrente '{self.object.name}' eliminado exitosamente")
         return response
+
+
+# Vista para la lista de ingresos recurrentes
+class RecurringIncomeListView(LoginRequiredMixin, ListView):
+    model = RecurringIncome
+    template_name = 'pfinance/recurring_income_list.html'
+    context_object_name = 'incomes'
+    paginate_by = 10
+
+    def get_queryset(self):
+        return self.request.user.recurring_incomes.select_related('category').order_by('next_income_date')
+
+
+# Vista para crear ingresos recurrentes
+class RecurringIncomeCreateView(LoginRequiredMixin, SuccessMessageMixin, CreateView):
+    model = RecurringIncome
+    form_class = RecurringIncomeForm
+    template_name = 'pfinance/recurring_income_create.html'
+    success_url = reverse_lazy('pfinance:recurring_income_list')
+
+    def form_valid(self, form):
+        form.instance.user = self.request.user
+        return super().form_valid(form)
+
+    def get_form_kwargs(self):
+        kwargs = super().get_form_kwargs()
+        kwargs['user'] = self.request.user
+        return kwargs
+
+
+# Vista para borrar ingresos recurrentes
+class RecurringIncomeDeleteView(LoginRequiredMixin, DeleteView):
+    model = RecurringIncome
+    template_name = 'pfinance/recurring_income_confirm_delete.html'
+    success_url = reverse_lazy('pfinance:recurring_income_list')
+    context_object_name = 'income'
+
+    def get_queryset(self):
+        return self.request.user.recurring_incomes
+
+
+

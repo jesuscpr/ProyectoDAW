@@ -43,4 +43,11 @@ urlpatterns = [
     path('recurring-payments/', views.RecurringPaymentListView.as_view(), name='recurring_payments'),
     path('recurring-payments/create/', views.RecurringPaymentCreateView.as_view(), name='recurring_payment_create'),
     path('recurring-payments/<int:pk>/delete/', views.RecurringPaymentDeleteView.as_view(), name='recurring_payment_delete'),
+
+
+    # Ingresos recurrentes
+    path('recurring-incomes/', views.RecurringIncomeListView.as_view(), name='recurring_income_list'),
+    path('recurring-incomes/create/', views.RecurringIncomeCreateView.as_view(), name='recurring_income_create'),
+    path('recurring-incomes/<int:pk>/delete/', views.RecurringIncomeDeleteView.as_view(), name='recurring_income_delete'),
+
 ]

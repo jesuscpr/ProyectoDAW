@@ -5,9 +5,10 @@ from django.core.exceptions import ValidationError
 from django.db import transaction
 from django.utils import timezone
 
-from .models import UserProfile, CURRENCY_CHOICES, Category, Budget, Transaction, RecurringPayment
+from .models import UserProfile, CURRENCY_CHOICES, Category, Budget, Transaction, RecurringPayment, RecurringIncome
 
 
+# Formulario para el registro
 class SignUpForm(UserCreationForm):
     monthly_income = forms.DecimalField(
         max_digits=10,
@@ -60,6 +61,7 @@ class SignUpForm(UserCreationForm):
         return user
 
 
+# Formulario para editar el perfil
 class ProfileEditForm(forms.ModelForm):
     email = forms.EmailField(
         label='Email',
@@ -118,6 +120,7 @@ class ProfileEditForm(forms.ModelForm):
         return income
 
 
+# Formulario para presupuestos
 class BudgetForm(forms.ModelForm):
     def __init__(self, *args, user=None, **kwargs):
         self.user = user  # Guardamos el usuario como atributo del formulario
@@ -173,6 +176,7 @@ class BudgetForm(forms.ModelForm):
         return cleaned_data
 
 
+# Formulario para transacciones
 class TransactionForm(forms.ModelForm):
     def __init__(self, *args, user=None, **kwargs):
         super().__init__(*args, **kwargs)
@@ -220,6 +224,7 @@ class TransactionForm(forms.ModelForm):
         return amount
 
 
+# Formulario para pagos recurrentes
 class RecurringPaymentForm(forms.ModelForm):
     class Meta:
         model = RecurringPayment
@@ -250,4 +255,35 @@ class RecurringPaymentForm(forms.ModelForm):
 
         return cleaned_data
 
+
+# Formulario para ingresos recurrentes
+class RecurringIncomeForm(forms.ModelForm):
+    class Meta:
+        model = RecurringIncome
+        fields = ['name', 'amount', 'source', 'category', 'start_date',
+                  'end_date', 'frequency', 'next_income_date']
+        widgets = {
+            'start_date': forms.DateInput(attrs={'type': 'date'}),
+            'end_date': forms.DateInput(attrs={'type': 'date'}),
+            'next_income_date': forms.DateInput(attrs={'type': 'date'}),
+        }
+
+    def __init__(self, *args, **kwargs):
+        self.user = kwargs.pop('user', None)
+        super().__init__(*args, **kwargs)
+
+        if self.user:
+            self.fields['category'].queryset = Category.objects.all()
+
+    def clean(self):
+        cleaned_data = super().clean()
+        start_date = cleaned_data.get('start_date')
+        end_date = cleaned_data.get('end_date')
+        next_date = cleaned_data.get('next_income_date')
+
+        if end_date and start_date and end_date < start_date:
+            raise ValidationError("La fecha de fin debe ser posterior a la de inicio")
+
+        if next_date and start_date and next_date < start_date:
+            raise ValidationError("La próxima fecha de ingreso no puede ser anterior a la fecha de inicio")
 
