@@ -29,7 +29,6 @@ urlpatterns = [
     # Transacciones
     path('transactions/', views.TransactionListView.as_view(), name='transactions_list'),
     path('transactions/create/', views.TransactionCreateView.as_view(), name='transactions_create'),
-    path('transactions/<int:pk>/update/', views.TransactionUpdateView.as_view(), name='transactions_update'),
     path('transactions/<int:pk>/delete/', views.TransactionDeleteView.as_view(), name='transactions_delete'),
 
 
@@ -49,5 +48,6 @@ urlpatterns = [
     path('recurring-incomes/', views.RecurringIncomeListView.as_view(), name='recurring_income_list'),
     path('recurring-incomes/create/', views.RecurringIncomeCreateView.as_view(), name='recurring_income_create'),
     path('recurring-incomes/<int:pk>/delete/', views.RecurringIncomeDeleteView.as_view(), name='recurring_income_delete'),
+
 
 ]

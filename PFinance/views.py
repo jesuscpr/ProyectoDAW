@@ -7,8 +7,7 @@ from django.shortcuts import get_object_or_404, redirect
 from django.urls import reverse_lazy
 from django.views.generic import TemplateView, CreateView, UpdateView, DetailView, DeleteView, ListView, View
 
-from PFinance.forms import SignUpForm, ProfileEditForm, BudgetForm, TransactionForm, RecurringPaymentForm, \
-    RecurringIncomeForm
+from PFinance.forms import *
 from PFinance.models import UserProfile, Alert, Budget, Transaction, RecurringPayment, RecurringIncome
 
 
@@ -195,22 +194,6 @@ class TransactionCreateView(LoginRequiredMixin, CreateView):
 
     def form_valid(self, form):
         form.instance.user = self.request.user
-        return super().form_valid(form)
-
-
-# Vista para editar transacciones
-class TransactionUpdateView(LoginRequiredMixin, UpdateView):
-    model = Transaction
-    form_class = TransactionForm
-    template_name = 'pfinance/transactions_update.html'
-    success_url = reverse_lazy('pfinance:transactions_list')
-
-    def get_form_kwargs(self):
-        kwargs = super().get_form_kwargs()
-        kwargs['user'] = self.request.user
-        return kwargs
-
-    def form_valid(self, form):
         return super().form_valid(form)
 
 
