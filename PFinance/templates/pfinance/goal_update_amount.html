@@ -1,0 +1,59 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="card">
+        <div class="card-header bg-primary text-white">
+            <h4 class="mb-0">Actualizar Meta "{{ object.subject }}"</h4>
+        </div>
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="mb-4">
+                        <h5>Progreso Actual</h5>
+                        <div class="progress" role="progressbar">
+                            <div class="progress-bar 
+                                {% if goal.progress_percentage < 25 %}bg-danger
+                                {% elif goal.progress_percentage < 50 %}bg-warning
+                                {% elif goal.progress_percentage < 75 %}bg-info
+                                {% else %}bg-success{% endif %}" 
+                                style="width: {{ goal.progress_percentage }}%">
+                                {{ goal.progress_percentage|floatformat:0 }}%
+                            </div>
+                        </div>
+                        <p class="mt-2">
+                            <strong>Actual:</strong> {{ object.current_amount }} {{ user.profile.currency }}<br>
+                            <strong>Objetivo:</strong> {{ object.target_amount }} {{ user.profile.currency }}
+                        </p>
+                    </div>
+                </div>
+                
+                <div class="col-md-6">
+                    <form method="post">
+                        {% csrf_token %}
+                        
+                        <div class="mb-3">
+                            <label class="form-label"><strong>Nuevo Monto Actual</strong></label>
+                            {{ form.current_amount }}
+                            {% if form.current_amount.errors %}
+                            <div class="text-danger">
+                                {{ form.current_amount.errors.0 }}
+                            </div>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="d-flex justify-content-between">
+                            <a href="{% url 'pfinance:goals_list' %}" class="btn btn-secondary">
+                                Volver
+                            </a>
+                            <button type="submit" class="btn btn-primary">
+                                Actualizar
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

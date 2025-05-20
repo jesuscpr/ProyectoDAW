@@ -1,4 +1,5 @@
 from datetime import date
+from decimal import Decimal
 
 from django.core.exceptions import ValidationError
 from django.db import models
@@ -218,7 +219,7 @@ class Alert(models.Model):
     ]
     alert_type = models.CharField(max_length=10, choices=ALERT_TYPES)
 
-    transactions = models.ManyToManyField(Transaction, related_name='alerts')
+    transactions = models.ManyToManyField(Transaction, related_name='alerts', blank=True)
 
     def get_related_transactions(self):
         return self.transactions.all().order_by('-date')
@@ -333,4 +334,67 @@ class RecurringIncome(models.Model):
             self.update_next_income_date()
             return transaction
         return None
+
+
+class Goal(models.Model):
+    STATUS_CHOICES = [
+        ('in_progress', 'En progreso'),
+        ('completed', 'Completada'),
+    ]
+
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='goals')
+    subject = models.CharField(max_length=100, verbose_name="Asunto")
+    target_amount = models.DecimalField(
+        max_digits=12,
+        decimal_places=2,
+        validators=[MinValueValidator(0.01)],
+        verbose_name="Objetivo"
+    )
+    current_amount = models.DecimalField(
+        max_digits=12,
+        decimal_places=2,
+        default=0,
+        validators=[MinValueValidator(0)],
+        verbose_name="Monto actual"
+    )
+    status = models.CharField(
+        max_length=20,
+        choices=STATUS_CHOICES,
+        default='in_progress',
+        verbose_name="Estado"
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    notes = models.TextField(blank=True, verbose_name="Notas")
+
+    class Meta:
+        ordering = ['-created_at']
+        verbose_name = "Meta"
+        verbose_name_plural = "Metas"
+
+    def __str__(self):
+        return f"{self.subject} ({self.current_amount}/{self.target_amount})"
+
+    def progress_percentage(self):
+        """Calcula el porcentaje de progreso correctamente"""
+        try:
+            if self.target_amount > Decimal('0'):
+                percentage = (self.current_amount / self.target_amount) * 100
+                return min(100, int(percentage))  # Nunca más del 100%
+            return 0
+        except (TypeError, ValueError):
+            return 0
+
+    @property
+    def progress_display(self):
+        """Versión formateada para el template"""
+        return f"{self.progress_percentage():.0f}%"
+
+    def save(self, *args, **kwargs):
+        # Actualizar estado si se alcanza el monto objetivo
+        if self.current_amount >= self.target_amount:
+            self.status = 'completed'
+        elif self.status == 'completed' and self.current_amount < self.target_amount:
+            self.status = 'in_progress'
+        super().save(*args, **kwargs)
 

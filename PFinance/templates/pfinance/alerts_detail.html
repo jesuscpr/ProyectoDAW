@@ -19,7 +19,9 @@
                         <span class="badge bg-secondary">{{ alert.get_alert_type_display }}</span>
                         <small class="text-muted">Creada: {{ alert.created_at }}</small>
                     </div>
+                
                     <!-- Lista de transacciones -->
+                    {% if alert.alert_type == 'budget' or alert.alert_type == 'payment' %}
                     <h5 class="mt-3"><b>Transacciones</b></h5>
                     {% if transactions %}
                     <div class="table-responsive">
@@ -106,11 +108,15 @@
                         <p class="lead">No tienes transacciones registradas</p>
                     </div>
                     {% endif %}
+                {% endif %}
                 </div>
-                <div class="card-footer d-flex justify-content-between align-items-center">
+                <div class="{% if alert.alert_type == 'budget' or alert.alert_type == 'payment' %}
+                card-footer d-flex justify-content-between align-items-center {% endif %} card-footer text-end">
+                    {% if alert.alert_type == 'budget' or alert.alert_type == 'payment' %}
                     <p class="text-secondary mb-0 me-3 flex-grow-1">
                         Si el monto y la suma de las transacciones no coinciden, quizás alguna transacción ha sido borrada.
                     </p>
+                    {% endif %}
                     <a href="{% url 'pfinance:alerts' %}" class="btn btn-outline-secondary">
                         <i class="bi bi-arrow-left me-1"></i> Volver
                     </a>
