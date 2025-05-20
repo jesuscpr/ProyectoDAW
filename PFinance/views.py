@@ -7,6 +7,7 @@ from django.shortcuts import get_object_or_404, redirect
 from django.urls import reverse_lazy
 from django.views.generic import TemplateView, CreateView, UpdateView, DetailView, DeleteView, ListView, View
 
+
 from PFinance.forms import *
 from PFinance.models import UserProfile, Alert, Budget, Transaction, RecurringPayment, RecurringIncome
 

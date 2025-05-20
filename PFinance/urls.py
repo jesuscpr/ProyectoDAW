@@ -50,4 +50,5 @@ urlpatterns = [
     path('recurring-incomes/<int:pk>/delete/', views.RecurringIncomeDeleteView.as_view(), name='recurring_income_delete'),
 
 
+
 ]
