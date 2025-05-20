@@ -9,7 +9,7 @@ from django.views.generic import TemplateView, CreateView, UpdateView, DetailVie
 
 
 from PFinance.forms import *
-from PFinance.models import UserProfile, Alert, Budget, Transaction, RecurringPayment, RecurringIncome
+from PFinance.models import UserProfile, Alert, Budget, Transaction, RecurringPayment, RecurringIncome, Goal
 
 
 # Vista para el panel
@@ -290,6 +290,66 @@ class RecurringIncomeDeleteView(LoginRequiredMixin, DeleteView):
 
     def get_queryset(self):
         return self.request.user.recurring_incomes
+
+
+# Vista para la lista de metas
+class GoalListView(LoginRequiredMixin, ListView):
+    model = Goal
+    template_name = 'pfinance/goal_list.html'
+    context_object_name = 'goals'
+    paginate_by = 10
+
+    def get_queryset(self):
+        return self.request.user.goals.all()
+
+
+# Vista para crear metas
+class GoalCreateView(LoginRequiredMixin, CreateView):
+    model = Goal
+    form_class = GoalForm
+    template_name = 'pfinance/goal_create.html'
+    success_url = reverse_lazy('pfinance:goals_list')
+
+    def form_valid(self, form):
+        form.instance.user = self.request.user
+        return super().form_valid(form)
+
+
+# Vista para actualizar el monto de las metas
+class GoalUpdateAmountView(LoginRequiredMixin, UpdateView):
+    model = Goal
+    form_class = GoalAmountUpdateForm
+    template_name = 'pfinance/goal_update_amount.html'
+    success_url = reverse_lazy('pfinance:goals_list')
+
+    def get_queryset(self):
+        return self.request.user.goals.all()
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['progress_percentage'] = self.object.progress_percentage()
+        return context
+
+    def form_valid(self, form):
+        response = super().form_valid(form)
+
+        # Verificación adicional en la vista
+        if self.object.current_amount >= self.object.target_amount:
+            messages.success(
+                self.request,
+                f"¡Felicidades! Has alcanzado tu meta: {self.object.subject}"
+            )
+        return response
+
+
+# Vista para borrar una meta
+class GoalDeleteView(LoginRequiredMixin, DeleteView):
+    model = Goal
+    template_name = 'pfinance/goal_confirm_delete.html'
+    success_url = reverse_lazy('pfinance:goals_list')
+
+    def get_queryset(self):
+        return self.request.user.goals.all()
 
 
 

@@ -50,5 +50,9 @@ urlpatterns = [
     path('recurring-incomes/<int:pk>/delete/', views.RecurringIncomeDeleteView.as_view(), name='recurring_income_delete'),
 
 
-
+    # Metas
+    path('goals/', views.GoalListView.as_view(), name='goals_list'),
+    path('goals/create/', views.GoalCreateView.as_view(), name='goals_create'),
+    path('goals/<int:pk>/delete/', views.GoalDeleteView.as_view(), name='goal_delete'),
+    path('<int:pk>/edit/', views.GoalUpdateAmountView.as_view(), name='goal_edit'),
 ]

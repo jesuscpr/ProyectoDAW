@@ -6,14 +6,19 @@
         <div class="col-md-6">
             <div class="card">
                 <div class="card-header bg-danger text-white">
-                    <h4 class="mb-0">Eliminar Alerta</h4>
+                    <h4 class="mb-0">Eliminar Meta</h4>
                 </div>
                 <div class="card-body">
-                    <p>¿Estás seguro que deseas eliminar esta alerta?</p>
+                    <p>¿Estás seguro que deseas eliminar la meta <strong>"{{ object.subject }}"</strong>?</p>
+                    <div class="alert alert-warning">
+                        <strong>Estado:</strong> {{ object.get_status_display }}<br>
+                        <strong>Monto actual:</strong> {{ object.current_amount }} {{ request.user.profile.currency }}
+                    </div>
+                    
                     <form method="post">
                         {% csrf_token %}
                         <div class="d-grid gap-2 d-md-flex justify-content-md-end">
-                            <a href="{% url 'pfinance:alerts' %}" class="btn btn-secondary me-md-2">
+                            <a href="{% url 'pfinance:goals_list' %}" class="btn btn-secondary me-md-2">
                                 <i class="bi bi-x-circle me-1"></i> Cancelar
                             </a>
                             <button type="submit" class="btn btn-danger">

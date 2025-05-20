@@ -5,7 +5,8 @@ from django.core.exceptions import ValidationError
 from django.db import transaction
 from django.utils import timezone
 
-from .models import UserProfile, CURRENCY_CHOICES, Category, Budget, Transaction, RecurringPayment, RecurringIncome
+from .models import UserProfile, CURRENCY_CHOICES, Category, Budget, Transaction, RecurringPayment, RecurringIncome, \
+    Goal
 
 
 # Formulario para el registro
@@ -134,8 +135,8 @@ class BudgetForm(forms.ModelForm):
         widgets = {
             'amount': forms.NumberInput(attrs={
                 'class': 'form-control',
-                'step': '0.01',
-                'min': '0.01'
+                'step': '1.00',
+                'min': '1.00'
             }),
             'frequency': forms.Select(attrs={
                 'class': 'form-select'
@@ -286,4 +287,64 @@ class RecurringIncomeForm(forms.ModelForm):
 
         if next_date and start_date and next_date < start_date:
             raise ValidationError("La próxima fecha de ingreso no puede ser anterior a la fecha de inicio")
+
+
+class GoalForm(forms.ModelForm):
+    """Formulario base para crear/editar metas (no usado en la actualización de cantidad)"""
+
+    class Meta:
+        model = Goal
+        fields = ['subject', 'target_amount', 'notes']
+        widgets = {
+            'notes': forms.Textarea(attrs={'rows': 3, 'class': 'form-control'}),
+        }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields['target_amount'].widget.attrs.update({
+            'step': '1.00',
+            'min': '1.00'
+        })
+
+
+class GoalAmountUpdateForm(forms.ModelForm):
+    """Formulario exclusivo para actualizar el monto acumulado"""
+
+    class Meta:
+        model = Goal
+        fields = ['current_amount']
+        labels = {
+            'current_amount': 'Monto actual'
+        }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields['current_amount'].widget = forms.NumberInput(attrs={
+            'step': '1.00',
+            'min': '0',
+            'class': 'form-control form-control-lg',
+            'placeholder': 'Ingrese el nuevo valor'
+        })
+
+        # Establecer máximo como el target_amount + margen
+        if self.instance and self.instance.target_amount:
+            self.fields['current_amount'].widget.attrs['max'] = \
+                str(float(self.instance.target_amount) + 10000)
+
+    def clean_current_amount(self):
+        current_amount = self.cleaned_data['current_amount']
+
+        if current_amount < 0:
+            raise forms.ValidationError("El monto no puede ser negativo")
+
+        # Validación opcional para no superar demasiado el objetivo
+        target = self.instance.target_amount
+        limit = float(target) * 1.5
+        currency = self.instance.user.profile.currency
+        if target and current_amount > float(target) * 1.5:  # 50% más del objetivo
+            raise forms.ValidationError(
+                f"El monto actual no puede superar en más del 50% el objetivo. ({limit:.2f} {currency}))"
+            )
+
+        return current_amount
 

@@ -4,7 +4,7 @@ from django.dispatch import receiver
 from django.core.exceptions import ValidationError
 from django.utils import timezone
 
-from .models import Transaction, Budget, RecurringPayment, Alert
+from .models import Transaction, Budget, RecurringPayment, Alert, Goal
 from datetime import timedelta
 from decimal import Decimal
 
@@ -111,3 +111,29 @@ def check_recurring_payment_alerts(sender, instance, **kwargs):
             alert_type='payment',
             defaults={'read': False}
         )
+
+
+# Alertas para metas
+@receiver(post_save, sender=Goal)
+def check_goal_completion(sender, instance, created, **kwargs):
+    """
+    Signal que verifica si se alcanzó el objetivo y crea una alerta.
+    """
+    if not created:  # Solo para actualizaciones (no creación inicial)
+        if instance.current_amount >= instance.target_amount and instance.status == 'completed':
+            # Verificar si ya existe una alerta para evitar duplicados
+            existing_alert = Alert.objects.filter(
+                user=instance.user,
+                alert_type='goal',
+                title=f"Meta alcanzada: {instance.subject}"
+            ).exists()
+
+            if not existing_alert:
+                Alert.objects.create(
+                    user=instance.user,
+                    title=f"Meta alcanzada: {instance.subject}",
+                    message=f"¡Felicidades! Has alcanzado tu meta de {instance.target_amount} {instance.user.profile.currency} para '{instance.subject}'.",
+                    alert_type='goal'
+                )
+
+
