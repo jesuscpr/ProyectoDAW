@@ -9,6 +9,7 @@ from django.views.generic import TemplateView, CreateView, UpdateView, DetailVie
 
 
 from PFinance.forms import *
+
 from PFinance.models import UserProfile, Alert, Budget, Transaction, RecurringPayment, RecurringIncome, Goal
 
 
