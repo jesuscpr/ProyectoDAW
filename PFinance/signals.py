@@ -212,3 +212,4 @@ def update_budget_on_transaction_delete(sender, instance, **kwargs):
 
     budget.save()
 
+
