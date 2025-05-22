@@ -53,13 +53,6 @@
                             {% endif %}
                         </div>
                         
-                        <div class="mb-3 form-check form-switch">
-                            {{ form.is_active }}
-                            <label class="form-check-label" for="{{ form.is_active.id_for_label }}">
-                                {{ form.is_active.label }}
-                            </label>
-                        </div>
-                        
                         <div class="d-grid gap-2 d-md-flex justify-content-md-end">
                             <a href="{% url 'pfinance:budgets_list' %}" class="btn btn-secondary me-md-2">
                                 <i class="bi bi-x-circle me-1"></i> Cancelar

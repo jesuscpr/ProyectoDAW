@@ -74,6 +74,8 @@ def create_budget_alert(sender, instance, created, **kwargs):
                 )
             }
         )
+        budget.state = 'overlimit'
+        budget.save()
     else:
         # Buscamos o creamos la alerta
         alert, created = Alert.objects.get_or_create(
@@ -88,6 +90,8 @@ def create_budget_alert(sender, instance, created, **kwargs):
                 )
             }
         )
+        budget.state = 'limit'
+        budget.save()
 
     # Vinculamos TODAS las transacciones del período
     if created:
