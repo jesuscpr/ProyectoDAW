@@ -35,8 +35,8 @@
                                     <td>{{ budget.amount }} {{ budget.user.profile.currency }}</td>
                                     <td>{{ budget.get_frequency_display }}</td>
                                     <td>
-                                        <span class="badge bg-{% if budget.is_active %}success{% else %}secondary{% endif %}">
-                                            {% if budget.is_active %}Activo{% else %}Inactivo{% endif %}
+                                        <span class="badge bg-{% if budget.state == 'ok' %}success{% elif budget.state == 'limit' %}warning{% else %}danger{% endif %}">
+                                            {% if budget.state == 'ok' %}Sin traspasar{% elif budget.state == 'limit' %}Al límite{% else %}Traspasado{% endif %}
                                         </span>
                                     </td>
                                     <td>

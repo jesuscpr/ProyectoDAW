@@ -66,11 +66,19 @@ class Budget(models.Model):
         ('yearly', 'Anual'),
     ]
 
+    STATE_CHOICES = [
+        ('ok', 'Sin traspasar'),
+        ('limit', 'Al límite'),
+        ('overlimit', 'Traspasado'),
+    ]
+
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='budgets')
     category = models.ForeignKey(Category, on_delete=models.CASCADE, related_name='budgets')
     amount = models.DecimalField(max_digits=10, decimal_places=2, validators=[MinValueValidator(0.01)])
     frequency = models.CharField( max_length=10, choices=FREQUENCY_CHOICES, default='MENSUAL')
     is_active = models.BooleanField(default=True)
+
+    state = models.CharField( max_length=10, choices=STATE_CHOICES, default='ok')
 
     def spent_amount(self):
         return Transaction.objects.filter(

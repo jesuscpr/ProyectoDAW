@@ -131,7 +131,7 @@ class BudgetForm(forms.ModelForm):
 
     class Meta:
         model = Budget
-        fields = ['category', 'amount', 'frequency', 'is_active']
+        fields = ['category', 'amount', 'frequency']
         widgets = {
             'amount': forms.NumberInput(attrs={
                 'class': 'form-control',
@@ -140,16 +140,12 @@ class BudgetForm(forms.ModelForm):
             }),
             'frequency': forms.Select(attrs={
                 'class': 'form-select'
-            }),
-            'is_active': forms.CheckboxInput(attrs={
-                'class': 'form-check-input'
             })
         }
         labels = {
             'category': 'Categoría',
             'amount': 'Monto presupuestado',
             'frequency': 'Frecuencia',
-            'is_active': 'Presupuesto activo'
         }
 
     def clean(self):
