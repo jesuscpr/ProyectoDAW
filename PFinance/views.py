@@ -177,7 +177,9 @@ class TransactionListView(LoginRequiredMixin, ListView):
             user=user, is_expense=False
         ).aggregate(total=Sum('amount'))['total'] or 0
 
-        context['balance'] = context['total_income'] - context['total_expenses']
+        context['metas'] = Goal.objects.filter(user=user).aggregate(total=Sum('current_amount'))['total'] or 0
+
+        context['balance'] = context['total_income'] - context['total_expenses'] - context['metas']
 
         return context
 
@@ -197,6 +199,13 @@ class TransactionCreateView(LoginRequiredMixin, CreateView):
     def form_valid(self, form):
         form.instance.user = self.request.user
         return super().form_valid(form)
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+
+        context['categories'] = Category.objects.all()
+
+        return context
 
 
 # Vista para borrar transacciones

@@ -204,7 +204,10 @@ class TransactionForm(forms.ModelForm):
                 'class': 'form-control',
                 'rows': 3
             }),
-            'is_expense': forms.RadioSelect(choices=[(True, 'Gasto'), (False, 'Ingreso')])
+            'is_expense': forms.RadioSelect(choices=[(True, 'Gasto'), (False, 'Ingreso')],
+                                            attrs={
+                                                'class': 'd-none',
+                                            })
         }
         labels = {
             'amount': 'Monto',
