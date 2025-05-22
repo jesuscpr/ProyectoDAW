@@ -141,3 +141,74 @@ def check_goal_completion(sender, instance, created, **kwargs):
                 )
 
 
+# Modificación de estado de presupuesto y borrado de alerta al borrar una transacción
+@receiver(post_delete, sender=Transaction)
+def update_budget_on_transaction_delete(sender, instance, **kwargs):
+    """
+    Actualiza el estado del presupuesto cuando se borra una transacción,
+    revirtiendo los cambios si ya no se cumplen las condiciones.
+    """
+    if not instance.is_expense:
+        return
+
+    try:
+        budget = Budget.objects.select_related('user__profile').get(
+            user=instance.user,
+            category=instance.category,
+            is_active=True
+        )
+    except Budget.DoesNotExist:
+        return
+
+    # Determinamos el rango de fechas según la frecuencia del presupuesto
+    now = timezone.now()
+    if budget.frequency == 'yearly':
+        date_filter = {
+            'date__year': now.year
+        }
+    else:
+        date_filter = {
+            'date__year': now.year,
+            'date__month': now.month
+        }
+
+    # Obtenemos transacciones actuales del período
+    transactions = Transaction.objects.filter(
+        user=instance.user,
+        category=instance.category,
+        is_expense=True,
+        **date_filter
+    )
+
+    # Calculamos el nuevo total gastado
+    spent = transactions.aggregate(total=Sum('amount'))['total'] or Decimal('0')
+    threshold = budget.amount * Decimal('0.9')
+
+    # Buscamos alertas existentes para este presupuesto
+    alert = Alert.objects.filter(
+        user=instance.user,
+        alert_type='budget',
+        title__contains=budget.category.name
+    ).first()
+
+    # Lógica para actualizar el estado del presupuesto
+    if spent > budget.amount:
+        # Mantenemos estado overlimit si aún se supera el 100%
+        budget.state = 'overlimit'
+        if alert and 'traspasa' not in alert.title:
+            alert.title = f"Presupuesto traspasa el límite: {budget.category.name}"
+            alert.save()
+    elif spent > threshold:
+        # Si está entre 90-100%, cambiamos a limit (si estaba en overlimit)
+        budget.state = 'limit'
+        if alert and 'traspasa' in alert.title:
+            alert.delete()
+    else:
+        # Si está por debajo del 90%, volvemos a ok
+        budget.state = 'ok'
+        # Eliminamos la alerta si ya no es necesaria
+        if alert:
+            alert.delete()
+
+    budget.save()
+

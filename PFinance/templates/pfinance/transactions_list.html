@@ -30,7 +30,7 @@
         <div class="card-body">
             <!-- Resumen -->
             <div class="row mb-4">
-                <div class="col-md-4">
+                <div class="col-md-3">
                     <div class="card bg-success text-white mb-3 mb-md-0">
                         <div class="card-body">
                             <h5 class="card-title">Ingresos</h5>
@@ -38,7 +38,7 @@
                         </div>
                     </div>
                 </div>
-                <div class="col-md-4">
+                <div class="col-md-3">
                     <div class="card bg-danger text-white mb-3 mb-md-0">
                         <div class="card-body">
                             <h5 class="card-title">Gastos</h5>
@@ -46,8 +46,16 @@
                         </div>
                     </div>
                 </div>
-                <div class="col-md-4">
-                    <div class="card bg-{% if balance >= 0 %}primary{% else %}warning{% endif %} text-white">
+                <div class="col-md-3">
+                    <div class="card bg-warning text-white mb-3 mb-md-0">
+                        <div class="card-body">
+                            <h5 class="card-title">Metas</h5>
+                            <p class="display-6">{{ metas|floatformat:2 }} {{ request.user.profile.currency }}</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card bg-primary text-white">
                         <div class="card-body">
                             <h5 class="card-title">Balance</h5>
                             <p class="display-6">{{ balance|floatformat:2 }} {{ request.user.profile.currency }}</p>
