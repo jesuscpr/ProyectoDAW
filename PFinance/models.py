@@ -32,7 +32,6 @@ CURRENCY_CHOICES = [
 class UserProfile(models.Model):
     """Perfil extendido del usuario con información financiera adicional"""
     user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='profile')
-    monthly_income = models.DecimalField(max_digits=10, decimal_places=2, default=0.00)
     currency = models.CharField(max_length=3, choices=CURRENCY_CHOICES, default='EUR')
     # notification_email = models.BooleanField(default=True) (Próximamente)
     notification_app = models.BooleanField(default=True)
