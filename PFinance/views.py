@@ -1,8 +1,11 @@
+import json
+from datetime import timedelta
+
 from django.contrib import messages
 from django.contrib.auth import login
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.messages.views import SuccessMessageMixin
-from django.db.models import Sum
+from django.db.models import Sum, Q
 from django.shortcuts import get_object_or_404, redirect
 from django.urls import reverse_lazy
 from django.views.generic import TemplateView, CreateView, UpdateView, DetailView, DeleteView, ListView, View
@@ -17,6 +20,123 @@ from PFinance.models import UserProfile, Alert, Budget, Transaction, RecurringPa
 class DashboardView(LoginRequiredMixin, TemplateView):
     model = UserProfile
     template_name = 'pfinance/dashboard.html'
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        user = self.request.user
+
+        # Gráfico 1: Gastos por categoría (mes actual)
+        expenses_data = self.get_category_expenses(user)
+        # Gráfico 2: Evolución mensual (6 meses)
+        monthly_data = self.get_monthly_summary(user)
+        # Gráfico 3: Evolución de categorías (6 meses)
+        category_trends = self.get_category_trends(user)
+
+        context.update({
+            'categories_labels': json.dumps(expenses_data['labels']),
+            'categories_data': json.dumps(expenses_data['values']),
+            'months_labels': json.dumps(monthly_data['labels']),
+            'months_expenses': json.dumps(monthly_data['expenses']),
+            'months_income': json.dumps(monthly_data['income']),
+            'category_trends_labels': json.dumps(category_trends['labels']),
+            'category_trends_data': json.dumps(category_trends['data']),
+            'category_colors': json.dumps(category_trends['colors'])
+        })
+        return context
+
+    def get_category_expenses(self, user):
+        """Gastos agrupados por categoría (mes actual)"""
+        current_month = timezone.now().month
+        queryset = (
+            Transaction.objects
+            .filter(user=user, is_expense=True, date__month=current_month)
+            .values('category__name')
+            .annotate(total=Sum('amount')))
+
+        return {
+            'labels': [item['category__name'] for item in queryset],
+            'values': [float(item['total']) for item in queryset]
+        }
+
+    def get_monthly_summary(self, user):
+        """Resumen de ingresos/gastos últimos 6 meses"""
+        data = []
+        for i in range(5, -1, -1):  # Desde hace 5 meses hasta el actual
+            month = timezone.now() - timedelta(days=30 * i)
+            month_start = month.replace(day=1, hour=0, minute=0, second=0)
+            month_end = (month_start + timedelta(days=32)).replace(day=1)
+
+            monthly = (
+                Transaction.objects
+                .filter(user=user, date__range=(month_start, month_end))
+                .aggregate(
+                    expenses=Sum('amount', filter=Q(is_expense=True)),
+                    income=Sum('amount', filter=Q(is_expense=False))
+                )
+            )
+
+            data.append({
+                'label': month.strftime("%b %Y"),
+                'expenses': float(monthly['expenses'] or 0),
+                'income': float(monthly['income'] or 0)
+            })
+
+        return {
+            'labels': [item['label'] for item in data],
+            'expenses': [item['expenses'] for item in data],
+            'income': [item['income'] for item in data]
+        }
+
+    def get_category_trends(self, user):
+        """Evolución mensual de gastos por categoría (últimos 6 meses)"""
+        # Obtener solo las 5 categorías con más gastos
+        top_categories = (
+            Transaction.objects
+            .filter(user=user, is_expense=True)
+            .values('category__name')
+            .annotate(total=Sum('amount'))
+            .order_by('-total')[:5]
+        )
+        categories = [item['category__name'] for item in top_categories]
+
+        # Preparar estructura de datos
+        data = {
+            'labels': [],
+            'data': {},
+            'colors': [
+                '#4e73df', '#1cc88a', '#36b9cc', '#f6c23e',
+                '#e74a3b', '#858796', '#5a5c69', '#2e59d9'
+            ]
+        }
+
+        # Obtener últimos 6 meses
+        for i in range(5, -1, -1):
+            month = timezone.now() - timedelta(days=30 * i)
+            month_label = month.strftime("%b %Y")
+            data['labels'].append(month_label)
+
+            month_start = month.replace(day=1, hour=0, minute=0, second=0)
+            month_end = (month_start + timedelta(days=32)).replace(day=1)
+
+            # Consulta por categoría
+            for category in categories:
+                total = (
+                        Transaction.objects
+                        .filter(
+                            user=user,
+                            is_expense=True,
+                            category__name=category,
+                            date__range=(month_start, month_end)
+                        )
+                        .aggregate(total=Sum('amount'))['total'] or 0
+                )
+
+                if category not in data['data']:
+                    data['data'][category] = []
+
+                data['data'][category].append(float(total))
+
+        return data
 
 
 # Vista de registro
