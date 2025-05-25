@@ -11,13 +11,6 @@ from .models import UserProfile, CURRENCY_CHOICES, Category, Budget, Transaction
 
 # Formulario para el registro
 class SignUpForm(UserCreationForm):
-    monthly_income = forms.DecimalField(
-        max_digits=10,
-        decimal_places=2,
-        initial=0.00,
-        label="Ingreso mensual",
-        widget=forms.NumberInput(attrs={'class': 'form-control'})
-    )
     currency = forms.ChoiceField(
         choices=CURRENCY_CHOICES,
         initial='EUR',
@@ -54,7 +47,6 @@ class SignUpForm(UserCreationForm):
 
         UserProfile.objects.create(
             user=user,
-            monthly_income=self.cleaned_data['monthly_income'],
             currency=self.cleaned_data['currency'],
             notification_app=self.cleaned_data['notification_app']
         )
@@ -71,7 +63,7 @@ class ProfileEditForm(forms.ModelForm):
 
     class Meta:
         model = UserProfile
-        fields = ['email', 'monthly_income', 'currency', 'notification_app']
+        fields = ['email', 'currency', 'notification_app']
         labels = {
             'email': 'Correo electrónico',
             'monthly_income': 'Ingreso mensual',
@@ -79,7 +71,6 @@ class ProfileEditForm(forms.ModelForm):
             'notification_app': 'Recibir notificaciones en la app'
         }
         widgets = {
-            'monthly_income': forms.NumberInput(attrs={'class': 'form-control'}),
             'currency': forms.Select(attrs={'class': 'form-control'}),
             'notification_app': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
         }
@@ -87,7 +78,6 @@ class ProfileEditForm(forms.ModelForm):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.fields['email'].label = "Correo electrónico"
-        self.fields['monthly_income'].label = 'Ingreso mensual'
         self.fields['currency'].label = 'Moneda'
         self.fields['notification_app'].label = 'Recibir notificaciones en la app'
         if self.instance and hasattr(self.instance, 'user'):
@@ -113,12 +103,6 @@ class ProfileEditForm(forms.ModelForm):
         if email and User.objects.filter(email=email).exclude(pk=self.instance.user.pk).exists():
             raise forms.ValidationError("Ya existe un usuario con ese email")
         return email
-
-    def clean_monthly_income(self):
-        income = self.cleaned_data.get('monthly_income')
-        if income and income < 0:
-            raise forms.ValidationError("El ingreso no puede ser negativo")
-        return income
 
 
 # Formulario para presupuestos
