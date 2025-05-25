@@ -59,6 +59,9 @@
 <script src="https://cdn.jsdelivr.net/npm/chart.js@3.7.1/dist/chart.min.js"></script>
 <script>
 document.addEventListener('DOMContentLoaded', function() {
+    // Constante para la divisa
+    const USER_CURRENCY = '{{ user_currency }}';
+    
     // Colores consistentes con tu tema
     const colors = {
         expense: '#e74a3b',  // Rojo
@@ -93,7 +96,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     tooltip: {
                         callbacks: {
                             label: function(context) {
-                                return `${context.label}: ${context.formattedValue} €`;
+                                return `${context.label}: ${context.formattedValue} ${USER_CURRENCY}`;
                             }
                         }
                     },
@@ -138,7 +141,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     y: { 
                         stacked: false,
                         ticks: {
-                            callback: function(value) { return value + ' €'; }
+                            callback: function(value) { return value + ' ' + USER_CURRENCY; }
                         }
                     }
                 },
@@ -146,7 +149,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     tooltip: {
                         callbacks: {
                             label: function(context) {
-                                return `${context.dataset.label}: ${context.formattedValue} €`;
+                                return `${context.dataset.label}: ${context.formattedValue} ${USER_CURRENCY}`;
                             }
                         }
                     }
@@ -155,6 +158,7 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     );
     
+    // Gráfico 3: Líneas (tendencia gastos)
     new Chart(categoryTrendsCtx, {
         type: 'line',
         data: {
@@ -177,7 +181,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     beginAtZero: true,
                     ticks: {
                         callback: function (value) {
-                            return value + ' €';
+                            return value + ' ' + USER_CURRENCY;
                         }
                     }
                 }
@@ -186,7 +190,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 tooltip: {
                     callbacks: {
                         label: function (context) {
-                            return `${context.dataset.label}: ${context.formattedValue} €`;
+                            return `${context.dataset.label}: ${context.formattedValue} ${USER_CURRENCY}`;
                         }
                     }
                 },
