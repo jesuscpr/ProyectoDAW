@@ -1,6 +1,205 @@
 {% extends 'base.html' %}
-{% block title %}Dashboard{% endblock %}
-{% block links %}{% endblock %}
+
 {% block content %}
-    <p style="color: black">{{ usuario }}</p>
+<div class="row">
+    <!-- Gráfico 1 -->
+    <div class="col-lg-6 mb-4">
+        <div class="card shadow">
+            <div class="card-header py-3">
+                <h6 class="m-0 font-weight-bold text-primary">
+                    Gastos por categoría (mensual)
+                </h6>
+            </div>
+            <div class="card-body">
+                <div class="chart-container" style="position: relative; height:300px; width:100%">
+                    <canvas id="categoriesChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Gráfico 2 -->
+    <div class="col-lg-6 mb-4">
+        <div class="card shadow">
+            <div class="card-header py-3">
+                <h6 class="m-0 font-weight-bold text-primary">
+                    Evolución mensual (últimos 6 meses)
+                </h6>
+            </div>
+            <div class="card-body">
+                <div class="chart-container" style="position: relative; height:300px; width:100%">
+                    <canvas id="monthlyChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Gráfico 3 -->
+<div class="row">
+    <div class="col-12 mb-4">
+        <div class="card shadow">
+            <div class="card-header py-3">
+                <h6 class="m-0 font-weight-bold text-primary">
+                    Tendencia de gastos por categoría (últimos 6 meses)
+                </h6>
+            </div>
+            <div class="card-body">
+                <div class="chart-container" style="position: relative; height: 400px; width:100%">
+                    <canvas id="categoryTrendsChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block js %}
+<!-- Chart.js + Inicialización -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js@3.7.1/dist/chart.min.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Colores consistentes con tu tema
+    const colors = {
+        expense: '#e74a3b',  // Rojo
+        income: '#1cc88a',   // Verde
+        background: '#f8f9fc'
+    };
+    
+    // Gráfico 3
+    const categoryTrendsCtx = document.getElementById('categoryTrendsChart');
+    const categoryData = JSON.parse('{{ category_trends_data|escapejs }}');
+    const categoryColors = JSON.parse('{{ category_colors|escapejs }}');
+
+    // 1. Gráfico de categorías (Doughnut)
+    new Chart(
+        document.getElementById('categoriesChart'),
+        {
+            type: 'doughnut',
+            data: {
+                labels: JSON.parse('{{ categories_labels|escapejs }}'),
+                datasets: [{
+                    data: JSON.parse('{{ categories_data|escapejs }}'),
+                    backgroundColor: [
+                        '#4e73df', '#1cc88a', '#36b9cc', '#f6c23e',
+                        '#e74a3b', '#858796', '#5a5c69', '#2e59d9'
+                    ],
+                    hoverBorderColor: "rgba(234, 236, 244, 1)",
+                }]
+            },
+            options: {
+                maintainAspectRatio: false,
+                plugins: {
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                return `${context.label}: ${context.formattedValue} €`;
+                            }
+                        }
+                    },
+                    legend: {
+                        position: 'right',
+                        labels: { padding: 20 }
+                    }
+                }
+            }
+        }
+    );
+
+    // 2. Gráfico mensual (Bar)
+    new Chart(
+        document.getElementById('monthlyChart'),
+        {
+            type: 'bar',
+            data: {
+                labels: JSON.parse('{{ months_labels|escapejs }}'),
+                datasets: [
+                    {
+                        label: "Gastos",
+                        backgroundColor: colors.expense,
+                        hoverBackgroundColor: '#c23d2e',
+                        data: JSON.parse('{{ months_expenses|escapejs }}')
+                    },
+                    {
+                        label: "Ingresos",
+                        backgroundColor: colors.income,
+                        hoverBackgroundColor: '#17a673',
+                        data: JSON.parse('{{ months_income|escapejs }}')
+                    }
+                ]
+            },
+            options: {
+                maintainAspectRatio: false,
+                scales: {
+                    x: { 
+                        stacked: false,
+                        grid: { display: false }
+                    },
+                    y: { 
+                        stacked: false,
+                        ticks: {
+                            callback: function(value) { return value + ' €'; }
+                        }
+                    }
+                },
+                plugins: {
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                return `${context.dataset.label}: ${context.formattedValue} €`;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    );
+    
+    new Chart(categoryTrendsCtx, {
+        type: 'line',
+        data: {
+            labels: JSON.parse('{{ category_trends_labels|escapejs }}'),
+            datasets: Object.keys(categoryData).map((category, index) => ({
+                label: category,
+                data: categoryData[category],
+                borderColor: categoryColors[index % categoryColors.length],
+                backgroundColor: 'rgba(0, 0, 0, 0)',
+                borderWidth: 2,
+                tension: 0.1,
+                pointRadius: 3,
+                pointHoverRadius: 5
+            }))
+        },
+        options: {
+            maintainAspectRatio: false,
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    ticks: {
+                        callback: function (value) {
+                            return value + ' €';
+                        }
+                    }
+                }
+            },
+            plugins: {
+                tooltip: {
+                    callbacks: {
+                        label: function (context) {
+                            return `${context.dataset.label}: ${context.formattedValue} €`;
+                        }
+                    }
+                },
+                legend: {
+                    position: 'bottom',
+                    labels: {
+                        boxWidth: 12,
+                        padding: 20
+                    }
+                }
+            }
+        },
+    });
+});
+</script>
 {% endblock %}
