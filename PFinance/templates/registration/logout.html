@@ -1,12 +1,67 @@
 {% extends 'base.html' %}
 {% block title %}Logout / PFinance{% endblock %}
+
+{% block style %}
+<style>
+    .card {
+        border: none;
+        overflow: hidden; /* Esto es importante para que el radius funcione */
+    }
+    
+    .card-header {
+        border-radius: 0.3rem 0.3rem 0 0 !important;
+    }
+    
+    .card-body {
+        border-radius: 0 0 0.3rem 0.3rem !important;
+    }
+    
+    .btn-primary:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    }
+    
+    .btn {
+        transition: all 0.3s ease;
+    }
+    
+    .bi-box-arrow-right {
+        animation: fadeIn 0.5s ease-in-out;
+    }
+    
+    @keyframes fadeIn {
+        from { opacity: 0; transform: scale(0.8); }
+        to { opacity: 1; transform: scale(1); }
+    }
+</style>
+{% endblock %}
+
 {% block content %}
-   <div class="container d-flex justify-content-center align-items-center min-vh-50">
-        <div class="alert alert-secondary text-center shadow-lg p-5 rounded-4 mt-5" role="alert" style="background-color: rgba(50,49,49,0.63);">
-            <h1 class="display-4 fw-bold" style="color:white">¡Sesión cerrada!</h1>
-            <p class="lead" style="color:white">Has cerrado sesión correctamente.</p>
-            <a href="{% url 'pfinance:login' %}" class="btn btn-primary btn-lg mt-3">Iniciar sesión</a>
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-6 col-md-8">
+            <div class="card shadow-lg border-0">
+                <div class="card-header bg-primary text-white py-3">
+                    <h2 class="h4 mb-0 text-center">Sesión Cerrada</h2>
+                </div>
+                <div class="card-body p-4 p-md-5 bg-white text-center">
+                    <!-- Icono de logout -->
+                    <div class="mb-1">
+                        <i class="bi bi-box-arrow-right text-primary" style="font-size: 3rem;"></i>
+                    </div>
+                    
+                    <!-- Mensaje -->
+                    <p class="lead fs-4 mb-4">Has cerrado sesión correctamente.</p>
+                    
+                    <!-- Botón de login -->
+                    <div class="d-grid gap-2 col-md-8 mx-auto mb-4">
+                        <a href="{% url 'pfinance:login' %}" class="btn btn-primary py-2">
+                            <i class="bi bi-box-arrow-in-right me-2"></i>Volver a Iniciar Sesión
+                        </a>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
-
+</div>
 {% endblock %}

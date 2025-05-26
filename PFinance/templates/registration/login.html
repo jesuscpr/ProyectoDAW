@@ -1,30 +1,116 @@
 {% extends 'base.html' %}
+{% load static %}
 
 {% block title %}Login / PFinance{% endblock %}
 
+{% block style %}
+<style>
+    /* Estilos consistentes con el registro */
+    .form-control:focus {
+        border-color: #4e73df;
+        box-shadow: 0 0 0 0.25rem rgba(78, 115, 223, 0.25);
+    }
+    
+    .card {
+        border: none;
+    }
+    
+    .card-header {
+        border-radius: 0.3rem 0.3rem 0 0 !important;
+    }
+    
+    .invalid-feedback {
+        font-size: 0.85rem;
+    }
+    
+    .alert-danger {
+        background-color: #f8d7da;
+        border-color: #f5c2c7;
+        color: #842029;
+    }
+    
+    /* Asegurar fondo blanco */
+    body {
+        background-color: #f8f9fa;
+    }
+    
+    .card-body.bg-white {
+        background-color: white;
+        border-radius: 0 0 0.3rem 0.3rem;
+    }
+</style>
+{% endblock %}
+
 {% block content %}
-<div class="d-flex justify-content-center align-items-center vh-50">
-    <div class="card p-5 shadow-md  text-light mt-5" style="max-width: 500px; width: 100%; border-radius: 12px;background-color: rgba(21,21,21,0.73);">
-        <h2 class="text-center fs-1 mb-3">Iniciar Sesión</h2>
-        <form method="post">
-            {% csrf_token %}
-            <div class="mb-4">
-                <label for="id_username" class="form-label fs-3 text-center">Usuario:</label>
-               <span class="form-control-md w-100" style="margin-left: 12%;">{{ form.username }}</span>
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-6 col-md-8">
+            <div class="card shadow-lg border-0 rounded-3">
+                <div class="card-header bg-primary text-white py-3">
+                    <h2 class="h4 mb-0 text-center">Iniciar Sesión</h2>
+                </div>
+                <div class="card-body p-4 p-md-5 bg-white">
+                    <form method="post" class="needs-validation" novalidate>
+                        {% csrf_token %}
+                        
+                        <!-- Campo Usuario -->
+                        <div class="mb-4">
+                            <label for="{{ form.username.id_for_label }}" class="form-label mb-1 fw-semibold">
+                                Nombre de Usuario
+                            </label>
+                            <input type="text" 
+                                   name="{{ form.username.name }}" 
+                                   id="{{ form.username.id_for_label }}" 
+                                   class="form-control mt-1 {% if form.username.errors %}is-invalid{% endif %}" 
+                                   {% if form.username.value %}value="{{ form.username.value }}"{% endif %}
+                                   placeholder="Introduce tu nombre de usuario">
+                            {% for error in form.username.errors %}
+                            <div class="invalid-feedback d-block">{{ error }}</div>
+                            {% endfor %}
+                        </div>
+                        
+                        <!-- Campo Contraseña -->
+                        <div class="mb-4">
+                            <label for="{{ form.password.id_for_label }}" class="form-label mb-1 fw-semibold">
+                                Contraseña
+                            </label>
+                            <input type="password" 
+                                   name="{{ form.password.name }}" 
+                                   id="{{ form.password.id_for_label }}" 
+                                   class="form-control mt-1 {% if form.password.errors %}is-invalid{% endif %}"
+                                   placeholder="Contraseña">
+                            {% for error in form.password.errors %}
+                            <div class="invalid-feedback d-block">{{ error }}</div>
+                            {% endfor %}
+                        </div>
+                        
+                        <!-- Errores generales -->
+                        {% if form.errors %}
+                        <div class="alert alert-danger mb-4">
+                            {% for error in form.non_field_errors %}
+                            <p class="mb-0">{{ error }}</p>
+                            {% endfor %}
+                        </div>
+                        {% endif %}
+                        
+                        <!-- Botón de Login -->
+                        <div class="d-grid mt-4">
+                            <button type="submit" class="btn btn-primary py-2">
+                                <i class="bi bi-box-arrow-in-right me-2"></i>Iniciar Sesión
+                            </button>
+                        </div>
+                        
+                        <!-- Enlace a Registro -->
+                        <div class="text-center mt-4 pt-3 border-top">
+                            <p class="mb-3">¿No tienes cuenta?</p>
+                            <a href="{% url 'pfinance:register' %}" class="btn btn-outline-primary">
+                                <i class="bi bi-person-plus me-2"></i>Crear Cuenta
+                            </a>
+                        </div>
+                    </form>
+                </div>
             </div>
-            <div class="mb-4">
-                <label for="id_password" class="form-label fs-3 ">Contraseña:</label>
-               <span class="form-control-md w-100" style="">{{ form.password }}</span>
-            </div>
-            {% if form.errors %}
-                {% for error in form.non_field_errors %}
-                <div class="text-danger"><p>{{ error }}</p></div>
-                {% endfor %}
-            {% endif %}
-            <button type="submit" class="btn btn-primary btn-lg w-100">Iniciar Sesión</button>
-            <p class="lead mt-4 pt-2" style="border-top: 3px solid darkslategray">¿No tienes cuenta?</p>
-            <a href="{% url 'pfinance:register' %}" class="btn btn-warning btn-lg w-100">Registrarse</a>
-        </form>
+        </div>
     </div>
 </div>
 {% endblock %}

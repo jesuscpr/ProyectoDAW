@@ -15,32 +15,60 @@ class SignUpForm(UserCreationForm):
         choices=CURRENCY_CHOICES,
         initial='EUR',
         label="Moneda",
-        widget=forms.Select(attrs={'class': 'form-control'})
+        widget=forms.Select(attrs={
+            'class': 'form-control mt-1',
+            'style': 'width: 100%'
+        })
     )
     notification_app = forms.BooleanField(
         initial=True,
         required=False,
         label="Recibir notificaciones en la app",
-        widget=forms.CheckboxInput(attrs={'class': 'form-check-input'})
+        widget=forms.CheckboxInput(attrs={
+            'class': 'form-check-input mt-1'
+        })
     )
 
     class Meta:
         model = User
         fields = ('username', 'email', 'password1', 'password2')
         widgets = {
-            'username': forms.TextInput(attrs={'class': 'form-control'}),
-            'email': forms.EmailInput(attrs={'class': 'form-control'}),
+            'username': forms.TextInput(attrs={
+                'class': 'form-control mt-1',
+                'placeholder': 'Ingresa tu nombre de usuario'
+            }),
+            'email': forms.EmailInput(attrs={
+                'class': 'form-control mt-1',
+                'placeholder': 'ejemplo@dominio.com'
+            }),
         }
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.fields['password1'].widget.attrs.update({'class': 'form-control'})
-        self.fields['password2'].widget.attrs.update({'class': 'form-control'})
+
+        # Campos de contraseña
+        self.fields['password1'].widget.attrs.update({
+            'class': 'form-control mt-1',
+            'placeholder': 'Mínimo 8 caracteres'
+        })
+        self.fields['password2'].widget.attrs.update({
+            'class': 'form-control mt-1',
+            'placeholder': 'Repite tu contraseña'
+        })
+
+        # Labels y ayuda
+        self.fields['username'].label = "Nombre de usuario"
+        self.fields['username'].help_text = "Ingresa un nombre de usuario que no contenga información sensible."
         self.fields['password1'].label = "Contraseña"
         self.fields['password2'].label = "Confirmar contraseña"
         self.fields['password1'].help_text = "Mínimo 8 caracteres. No puede ser similar a tu información personal."
         self.fields['password2'].help_text = "Repite la contraseña para verificación."
         self.fields['email'].label = "Correo electrónico"
+
+        # Aplicar clases a todos los labels
+        for field_name, field in self.fields.items():
+            field.widget.attrs['class'] = field.widget.attrs.get('class', '') + ' form-control mt-1'
+            field.label_attrs = {'class': 'form-label mb-1 fw-semibold'}
 
     def save(self, commit=True):
         user = super().save(commit=commit)
