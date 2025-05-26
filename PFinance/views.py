@@ -55,7 +55,11 @@ class DashboardView(LoginRequiredMixin, TemplateView):
             'category_trends_labels': json.dumps(category_trends['labels']),
             'category_trends_data': json.dumps(category_trends['data']),
             'category_colors': json.dumps(category_trends['colors']),
-            'user_currency': currency_symbol
+            'user_currency': currency_symbol,
+            'goals_data': self.get_goals_data(user),
+            'budgets_data': self.get_budgets_data(user),
+            'recurring_incomes_data': self.get_recurring_incomes_data(user),
+            'recurring_payments_data': self.get_recurring_payments_data(user)
         })
         return context
 
@@ -152,6 +156,76 @@ class DashboardView(LoginRequiredMixin, TemplateView):
                 data['data'][category].append(float(total))
 
         return data
+
+    def get_goals_data(self, user):
+        """Datos para gráfico de metas en formato bar stacked"""
+        goals = Goal.objects.filter(user=user, status='in_progress')
+        return {
+            'labels': [goal.subject for goal in goals],
+            'target': [float(goal.target_amount) for goal in goals],
+            'current': [float(goal.current_amount) for goal in goals],
+            'progress': [goal.progress_percentage() for goal in goals]
+        }
+
+    def get_budgets_data(self, user):
+        """Datos para gráfico de presupuestos con filtro por período"""
+        budgets = Budget.objects.filter(user=user, is_active=True).select_related('category')
+        now = timezone.now()
+
+        budgets_data = {
+            'labels': [],
+            'amounts': [],
+            'spent': [],
+            'states': []
+        }
+
+        for budget in budgets:
+            # Determinar rango de fechas según frecuencia
+            if budget.frequency == 'yearly':
+                date_filter = {
+                    'date__year': now.year
+                }
+            else:  # monthly
+                date_filter = {
+                    'date__year': now.year,
+                    'date__month': now.month
+                }
+
+            # Calcular gastos solo para el período
+            spent = float(
+                Transaction.objects.filter(
+                    user=user,
+                    category=budget.category,
+                    is_expense=True,
+                    **date_filter
+                ).aggregate(total=Sum('amount'))['total'] or 0
+            )
+
+            budgets_data['labels'].append(budget.category.name)
+            budgets_data['amounts'].append(float(budget.amount))
+            budgets_data['spent'].append(spent)
+            budgets_data['states'].append(budget.state)
+
+        return budgets_data
+
+    def get_recurring_incomes_data(self, user):
+        """Datos para gráfico de ingresos recurrentes (doughnut)"""
+        incomes = RecurringIncome.objects.filter(user=user, is_active=True)
+        return {
+            'labels': [income.name for income in incomes],
+            'amounts': [float(income.amount) for income in incomes],
+            'sources': [income.get_source_display() for income in incomes],
+            'frequencies': [income.get_frequency_display() for income in incomes]
+        }
+
+    def get_recurring_payments_data(self, user):
+        """Datos para gráfico de pagos recurrentes (doughnut)"""
+        payments = RecurringPayment.objects.filter(user=user, is_active=True)
+        return {
+            'labels': [payment.name for payment in payments],
+            'amounts': [float(payment.amount) for payment in payments],
+            'frequencies': [payment.get_frequency_display() for payment in payments]
+        }
 
 
 # Vista de registro

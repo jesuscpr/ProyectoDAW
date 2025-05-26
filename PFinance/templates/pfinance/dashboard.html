@@ -52,6 +52,66 @@
         </div>
     </div>
 </div>
+
+<div class="row">
+    <!-- Gráfico 4: Metas (Doughnut) -->
+    <div class="col-md-6 mb-4">
+        <div class="card shadow h-100">
+            <div class="card-header py-3">
+                <h6 class="m-0 font-weight-bold text-primary">Progreso de Metas</h6>
+            </div>
+            <div class="card-body">
+                <div class="chart-container" style="position: relative; height:300px;">
+                    <canvas id="goalsChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Gráfico 5: Presupuestos (Bar Stacked) -->
+    <div class="col-md-6 mb-4">
+        <div class="card shadow h-100">
+            <div class="card-header py-3">
+                <h6 class="m-0 font-weight-bold text-primary">Estado de Presupuestos</h6>
+            </div>
+            <div class="card-body">
+                <div class="chart-container" style="position: relative; height:300px;">
+                    <canvas id="budgetsChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <!-- Gráfico 6: Ingresos Recurrentes (Doughnut) -->
+    <div class="col-md-6 mb-4">
+        <div class="card shadow h-100">
+            <div class="card-header py-3">
+                <h6 class="m-0 font-weight-bold text-primary">Ingresos Recurrentes</h6>
+            </div>
+            <div class="card-body">
+                <div class="chart-container" style="position: relative; height:300px;">
+                    <canvas id="incomesChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Gráfico 7: Pagos Recurrentes (Doughnut) -->
+    <div class="col-md-6 mb-4">
+        <div class="card shadow h-100">
+            <div class="card-header py-3">
+                <h6 class="m-0 font-weight-bold text-primary">Pagos Recurrentes</h6>
+            </div>
+            <div class="card-body">
+                <div class="chart-container" style="position: relative; height:300px;">
+                    <canvas id="paymentsChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
 {% endblock %}
 
 {% block js %}
@@ -61,6 +121,7 @@
 document.addEventListener('DOMContentLoaded', function() {
     // Constante para la divisa
     const USER_CURRENCY = '{{ user_currency }}';
+    const formatMoney = (value) => value + ' ' + USER_CURRENCY;
     
     // Colores consistentes con tu tema
     const colors = {
@@ -203,6 +264,224 @@ document.addEventListener('DOMContentLoaded', function() {
                 }
             }
         },
+    });
+
+    // Gráfico 4: Progreso de Metas (Bar Stacked)
+    new Chart(document.getElementById('goalsChart'), {
+        type: 'bar',
+        data: {
+            labels: {{ goals_data.labels|safe }},
+            datasets: [
+                {
+                    label: 'Por conseguir',
+                    data: {{ goals_data.target|safe }}.map(
+                        (target, i) => target - {{ goals_data.current|safe }}[i]
+                    ),
+                    backgroundColor: function(context) {
+                        const progress = {{ goals_data.progress|safe }}[context.dataIndex];
+                        if (progress >= 100) return '#1cc88a';  // Verde si completada
+                        if (progress >= 75) return '#f6c23e';   // Amarillo
+                        return '#858796';                       // Gris
+                    },
+                    stack: 'Stack 1'
+                },
+                {
+                    label: 'Actual',
+                    data: {{ goals_data.current|safe }},
+                    backgroundColor: '#1cc88a',  // Verde
+                    stack: 'Stack 1'
+                }
+            ]
+        },
+        options: {
+            maintainAspectRatio: false,
+            scales: {
+                x: {
+                    stacked: true,
+                    grid: { display: false }
+                },
+                y: {
+                    stacked: true,
+                    ticks: {
+                        callback: formatMoney,
+                        beginAtZero: true
+                    }
+                }
+            },
+            plugins: {
+                tooltip: {
+                    callbacks: {
+                        label: function(context) {
+                            const label = context.dataset.label || '';
+                            let value = context.raw;
+                            let extra = '';
+
+                            if (context.datasetIndex === 1) {  // Solo para "Alctual"
+                                const target = {{ goals_data.target|safe }}[context.dataIndex];
+                                extra = ` (${((value/target)*100).toFixed(1)}%)`;
+                            }
+
+                            return `${label}: ${formatMoney(value)}${extra}`;
+                        }
+                    }
+                },
+                legend: {
+                    position: 'bottom',
+                    labels: {
+                        boxWidth: 12,
+                        padding: 20,
+                        usePointStyle: true
+                    }
+                }
+            }
+        }
+    });
+
+    // Gráfico 5: Estado de Presupuestos (Bar Stacked)
+    new Chart(document.getElementById('budgetsChart'), {
+        type: 'bar',
+        data: {
+            labels: {{ budgets_data.labels|safe }},
+            datasets: [
+                {
+                    label: 'Disponible',
+                    data: {{ budgets_data.amounts|safe }}.map(
+                        (amount, i) => amount - {{ budgets_data.spent|safe }}[i]
+                    ),
+                    backgroundColor: function(context) {
+                        // Color según estado del presupuesto
+                        const states = {{ budgets_data.states|safe }};
+                        if (states[context.dataIndex] === 'overlimit') {
+                            return '#e74a3b';  // Rojo para traspasado
+                        } else if (states[context.dataIndex] === 'limit') {
+                            return '#f6c23e';  // Amarillo para al límite
+                        }
+                        return '#1cc88a';  // Verde para normal
+                    },
+                    stack: 'Stack 1'
+                },
+                {
+                    label: 'Gastado',
+                    data: {{ budgets_data.spent|safe }},
+                    backgroundColor: '#858796',  // Gris para lo gastado
+                    stack: 'Stack 1'
+                }
+            ]
+        },
+        options: {
+            maintainAspectRatio: false,
+            responsive: true,
+            scales: {
+                x: {
+                    stacked: true,
+                    grid: { display: false }
+                },
+                y: {
+                    stacked: true,
+                    ticks: {
+                        callback: formatMoney,
+                        beginAtZero: true
+                    }
+                }
+            },
+            plugins: {
+                tooltip: {
+                    callbacks: {
+                        label: function(context) {
+                            const label = context.dataset.label || '';
+                            let value = context.raw;
+
+                            return `${label}: ${formatMoney(value)}`;
+                        },
+                        afterLabel: function(context) {
+                            const states = {{ budgets_data.states|safe }};
+                            const stateLabels = {
+                                'ok': 'Dentro del presupuesto',
+                                'limit': '¡Al límite!',
+                                'overlimit': '¡Presupuesto traspasado!'
+                            };
+                            return `Estado: ${stateLabels[states[context.dataIndex]]}`;
+                        }
+                    }
+                },
+                legend: {
+                    position: 'bottom',
+                    labels: {
+                        boxWidth: 12,
+                        padding: 20,
+                        usePointStyle: true
+                    }
+                }
+            }
+        }
+    });
+
+    // Gráfico 6: Ingresos Recurrentes (Doughnut)
+    new Chart(document.getElementById('incomesChart'), {
+        type: 'doughnut',
+        data: {
+            labels: {{ recurring_incomes_data.labels|safe }},
+            datasets: [{
+                data: {{ recurring_incomes_data.amounts|safe }},
+                backgroundColor: [
+                    '#4e73df', '#1cc88a', '#36b9cc', '#f6c23e'
+                ]
+            }]
+        },
+        options: {
+            maintainAspectRatio: false,
+            plugins: {
+                tooltip: {
+                    callbacks: {
+                        label: function(context) {
+                            const label = context.label || '';
+                            const amount = formatMoney(context.raw);
+                            const frequency = {{ recurring_incomes_data.frequencies|safe }}[context.dataIndex];
+                            const source = {{ recurring_incomes_data.sources|safe }}[context.dataIndex];
+                            
+                            return [
+                                `${label}: ${amount}`,
+                                `Tipo: ${source}`,
+                                `Frecuencia: ${frequency}`
+                            ];
+                        }
+                    }
+                }
+            }
+        }
+    });
+
+    // Gráfico 7: Pagos Recurrentes (Doughnut)
+    new Chart(document.getElementById('paymentsChart'), {
+        type: 'doughnut',
+        data: {
+            labels: {{ recurring_payments_data.labels|safe }},
+            datasets: [{
+                data: {{ recurring_payments_data.amounts|safe }},
+                backgroundColor: [
+                    '#e74a3b', '#f6c23e', '#858796', '#5a5c69'
+                ]
+            }]
+        },
+        options: {
+            maintainAspectRatio: false,
+            plugins: {
+                tooltip: {
+                    callbacks: {
+                        label: function(context) {
+                            const label = context.label || '';
+                            const amount = formatMoney(context.raw);
+                            const frequency = {{ recurring_payments_data.frequencies|safe }}[context.dataIndex];
+                            
+                            return [
+                                `${label}: ${amount}`,
+                                `Frecuencia: ${frequency}`
+                            ];
+                        }
+                    }
+                }
+            }
+        }
     });
 });
 </script>

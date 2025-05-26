@@ -1,7 +1,6 @@
 from django.db.models import Sum
-from django.db.models.signals import post_save, pre_save, pre_delete, post_delete
+from django.db.models.signals import post_save, post_delete
 from django.dispatch import receiver
-from django.core.exceptions import ValidationError
 from django.utils import timezone
 
 from .models import Transaction, Budget, RecurringPayment, Alert, Goal
