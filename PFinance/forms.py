@@ -16,7 +16,7 @@ class SignUpForm(UserCreationForm):
         initial='EUR',
         label="Moneda",
         widget=forms.Select(attrs={
-            'class': 'form-control mt-1',
+            'class': 'form-select mt-1',
             'style': 'width: 100%'
         })
     )
@@ -99,7 +99,7 @@ class ProfileEditForm(forms.ModelForm):
             'notification_app': 'Recibir notificaciones en la app'
         }
         widgets = {
-            'currency': forms.Select(attrs={'class': 'form-control'}),
+            'currency': forms.Select(attrs={'class': 'form-select'}),
             'notification_app': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
         }
 
@@ -136,22 +136,23 @@ class ProfileEditForm(forms.ModelForm):
 # Formulario para presupuestos
 class BudgetForm(forms.ModelForm):
     def __init__(self, *args, user=None, **kwargs):
-        self.user = user  # Guardamos el usuario como atributo del formulario
+        self.user = user
         super().__init__(*args, **kwargs)
         if user:
-            self.fields['category'].queryset = Category.objects.all()
+            self.fields['category'].queryset = Category.objects.all().filter(is_expense=True)
+
+        # Aplicar clases consistentes
+        self.fields['category'].widget.attrs.update({'class': 'form-select mt-1'})
+        self.fields['amount'].widget.attrs.update({'class': 'form-control mt-1'})
+        self.fields['frequency'].widget.attrs.update({'class': 'form-select mt-1'})
 
     class Meta:
         model = Budget
         fields = ['category', 'amount', 'frequency']
         widgets = {
             'amount': forms.NumberInput(attrs={
-                'class': 'form-control',
                 'step': '1.00',
                 'min': '1.00'
-            }),
-            'frequency': forms.Select(attrs={
-                'class': 'form-select'
             })
         }
         labels = {
@@ -168,7 +169,6 @@ class BudgetForm(forms.ModelForm):
         user = getattr(self.instance, 'user', None) or self.user
 
         if category and frequency and user:
-            # Verificar si ya existe un presupuesto para esta categoría y frecuencia
             queryset = Budget.objects.filter(
                 user=user,
                 category=category,
@@ -192,11 +192,25 @@ class TransactionForm(forms.ModelForm):
         if user:
             self.fields['category'].queryset = Category.objects.all()
 
+        # Configurar clases consistentes
+        self.fields['amount'].widget.attrs.update({
+            'class': 'form-control mt-1',
+            'step': '0.01',
+            'min': '0.01'
+        })
+        self.fields['description'].widget.attrs.update({
+            'class': 'form-control mt-1',
+            'rows': '3'
+        })
+        self.fields['category'].widget.attrs.update({
+            'class': 'form-select mt-1'
+        })
+
         # Configurar el campo de fecha
         self.fields['date'].widget = forms.DateTimeInput(
             attrs={
                 'type': 'datetime-local',
-                'class': 'form-control',
+                'class': 'form-control mt-1',
                 'max': timezone.now().strftime('%Y-%m-%dT%H:%M')
             },
             format='%Y-%m-%dT%H:%M'
@@ -207,19 +221,7 @@ class TransactionForm(forms.ModelForm):
         model = Transaction
         fields = ['amount', 'category', 'date', 'description', 'is_expense']
         widgets = {
-            'amount': forms.NumberInput(attrs={
-                'class': 'form-control',
-                'step': '0.01',
-                'min': '0.01'
-            }),
-            'description': forms.Textarea(attrs={
-                'class': 'form-control',
-                'rows': 3
-            }),
-            'is_expense': forms.RadioSelect(choices=[(True, 'Gasto'), (False, 'Ingreso')],
-                                            attrs={
-                                                'class': 'd-none',
-                                            })
+            'is_expense': forms.RadioSelect(attrs={'class': 'd-none'})
         }
         labels = {
             'amount': 'Monto',
@@ -242,10 +244,15 @@ class RecurringPaymentForm(forms.ModelForm):
         model = RecurringPayment
         fields = ['name', 'amount', 'category', 'start_date',
                   'end_date', 'frequency', 'next_due_date', 'reminder_days']
-        widgets = {
-            'start_date': forms.DateInput(attrs={'type': 'date'}),
-            'end_date': forms.DateInput(attrs={'type': 'date'}),
-            'next_due_date': forms.DateInput(attrs={'type': 'date'}),
+        labels = {
+            'name': 'Nombre',
+            'amount': 'Monto',
+            'category': 'Categoría',
+            'start_date': 'Fecha de inicio',
+            'end_date': 'Fecha de fin',
+            'frequency': 'Frecuencia',
+            'next_due_date': 'Próximo pago',
+            'reminder_days': 'Días de recordatorio'
         }
 
     def __init__(self, *args, **kwargs):
@@ -257,6 +264,41 @@ class RecurringPaymentForm(forms.ModelForm):
             self.fields['category'].queryset = Category.objects.filter(
                 is_expense=True
             ).order_by('name')
+
+        # Aplicar clases consistentes a todos los campos
+        for field_name, field in self.fields.items():
+            if isinstance(field.widget, (forms.DateInput, forms.NumberInput, forms.TextInput)):
+                field.widget.attrs.update({'class': 'form-control mt-1'})
+            elif isinstance(field.widget, forms.Select):
+                field.widget.attrs.update({'class': 'form-select mt-1'})
+            elif isinstance(field.widget, forms.Textarea):
+                field.widget.attrs.update({'class': 'form-control mt-1', 'rows': '3'})
+
+        # Configuración específica para campos de fecha
+        self.fields['start_date'].widget = forms.DateInput(
+            attrs={
+                'type': 'date',
+                'class': 'form-control mt-1',
+                'max': timezone.now().strftime('%Y-%m-%d')
+            },
+            format='%Y-%m-%d'
+        )
+
+        self.fields['end_date'].widget = forms.DateInput(
+            attrs={
+                'type': 'date',
+                'class': 'form-control mt-1'
+            },
+            format='%Y-%m-%d'
+        )
+
+        self.fields['next_due_date'].widget = forms.DateInput(
+            attrs={
+                'type': 'date',
+                'class': 'form-control mt-1'
+            },
+            format='%Y-%m-%d'
+        )
 
     def clean(self):
         cleaned_data = super().clean()
@@ -278,19 +320,42 @@ class RecurringIncomeForm(forms.ModelForm):
     class Meta:
         model = RecurringIncome
         fields = ['name', 'amount', 'source', 'category', 'start_date',
-                  'end_date', 'frequency', 'next_income_date']
-        widgets = {
-            'start_date': forms.DateInput(attrs={'type': 'date'}),
-            'end_date': forms.DateInput(attrs={'type': 'date'}),
-            'next_income_date': forms.DateInput(attrs={'type': 'date'}),
+                 'end_date', 'frequency', 'next_income_date']
+        labels = {
+            'name': 'Nombre',
+            'amount': 'Monto',
+            'source': 'Fuente',
+            'category': 'Categoría',
+            'start_date': 'Fecha de inicio',
+            'end_date': 'Fecha de fin',
+            'frequency': 'Frecuencia',
+            'next_income_date': 'Próximo ingreso'
         }
 
     def __init__(self, *args, **kwargs):
         self.user = kwargs.pop('user', None)
         super().__init__(*args, **kwargs)
 
-        if self.user:
-            self.fields['category'].queryset = Category.objects.all()
+        # Configurar clases consistentes para todos los campos
+        for field_name, field in self.fields.items():
+            if isinstance(field.widget, (forms.DateInput, forms.NumberInput, forms.TextInput)):
+                field.widget.attrs.update({'class': 'form-control mt-1'})
+            elif isinstance(field.widget, forms.Select):
+                field.widget.attrs.update({'class': 'form-select mt-1'})
+            elif isinstance(field.widget, forms.Textarea):
+                field.widget.attrs.update({'class': 'form-control mt-1', 'rows': '3'})
+
+        # Configuración específica para campos de fecha
+        date_fields = ['start_date', 'end_date', 'next_income_date']
+        for date_field in date_fields:
+            self.fields[date_field].widget = forms.DateInput(
+                attrs={
+                    'type': 'date',
+                    'class': 'form-control mt-1',
+                    'max': timezone.now().strftime('%Y-%m-%d') if date_field == 'start_date' else None
+                },
+                format='%Y-%m-%d'
+            )
 
         # Filtrar categorías para mostrar solo las de ingresos (is_expense=False)
         if self.user and 'category' in self.fields:
@@ -310,6 +375,8 @@ class RecurringIncomeForm(forms.ModelForm):
         if next_date and start_date and next_date < start_date:
             raise ValidationError("La próxima fecha de ingreso no puede ser anterior a la fecha de inicio")
 
+        return cleaned_data
+
 
 # Formulario para metas
 class GoalForm(forms.ModelForm):
@@ -318,15 +385,30 @@ class GoalForm(forms.ModelForm):
     class Meta:
         model = Goal
         fields = ['subject', 'target_amount', 'notes']
+        labels = {
+            'subject': 'Objetivo',
+            'target_amount': 'Monto objetivo',
+            'notes': 'Notas'
+        }
         widgets = {
-            'notes': forms.Textarea(attrs={'rows': 3, 'class': 'form-control'}),
+            'notes': forms.Textarea(attrs={'rows': 3}),
         }
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+
+        # Configurar clases consistentes para todos los campos
+        for field_name, field in self.fields.items():
+            if isinstance(field.widget, (forms.NumberInput, forms.TextInput)):
+                field.widget.attrs.update({'class': 'form-control mt-1'})
+            elif isinstance(field.widget, forms.Textarea):
+                field.widget.attrs.update({'class': 'form-control mt-1', 'rows': '3'})
+
+        # Configuración específica para el monto objetivo
         self.fields['target_amount'].widget.attrs.update({
             'step': '1.00',
-            'min': '1.00'
+            'min': '1.00',
+            'class': 'form-control mt-1'
         })
 
 
