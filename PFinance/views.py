@@ -16,6 +16,13 @@ from PFinance.forms import *
 from PFinance.models import UserProfile, Alert, Budget, Transaction, RecurringPayment, RecurringIncome, Goal
 
 
+CURRENCY_SYMBOLS = {
+    'EUR': '€',
+    'USD': '$',
+    'GBP': '£',
+    'JPY': '¥'
+}
+
 # Vista para el panel
 class DashboardView(LoginRequiredMixin, TemplateView):
     model = UserProfile
@@ -24,6 +31,13 @@ class DashboardView(LoginRequiredMixin, TemplateView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         user = self.request.user
+
+        # Obtener la divisa del perfil
+        try:
+            currency_code = user.profile.currency
+            currency_symbol = CURRENCY_SYMBOLS.get(currency_code, currency_code)
+        except UserProfile.DoesNotExist:
+            currency_symbol = 'EUR'  # Valor por defecto
 
         # Gráfico 1: Gastos por categoría (mes actual)
         expenses_data = self.get_category_expenses(user)
@@ -40,7 +54,8 @@ class DashboardView(LoginRequiredMixin, TemplateView):
             'months_income': json.dumps(monthly_data['income']),
             'category_trends_labels': json.dumps(category_trends['labels']),
             'category_trends_data': json.dumps(category_trends['data']),
-            'category_colors': json.dumps(category_trends['colors'])
+            'category_colors': json.dumps(category_trends['colors']),
+            'user_currency': currency_symbol
         })
         return context
 
