@@ -16,6 +16,8 @@ def create_budget_alert(sender, instance, created, **kwargs):
     Crea alertas considerando el período del presupuesto (mensual/anual)
     y vincula las transacciones correspondientes.
     """
+    notifications = instance.user.profile.notification_app
+
     if not created or not instance.is_expense:
         return
 
@@ -61,59 +63,64 @@ def create_budget_alert(sender, instance, created, **kwargs):
 
     # Verificamos si supera el 100% del presupuesto
     if spent > budget.amount:
-        alert, created = Alert.objects.get_or_create(
-            user=instance.user,
-            alert_type='budget',
-            title=f"Presupuesto traspasa el límite: {budget.category.name}",
-            defaults={
-                'message': (
-                    f"Has gastado {spent:.2f}{budget.user.profile.currency} "
-                    f"({(spent / budget.amount) * 100:.1f}%) "
-                    f"del presupuesto {period_description}"
-                )
-            }
-        )
+        if notifications:
+            alert, created = Alert.objects.get_or_create(
+                user=instance.user,
+                alert_type='budget',
+                title=f"Presupuesto traspasa el límite: {budget.category.name}",
+                defaults={
+                    'message': (
+                        f"Has gastado {spent:.2f}{budget.user.profile.currency} "
+                        f"({(spent / budget.amount) * 100:.1f}%) "
+                        f"del presupuesto {period_description}"
+                    )
+                }
+            )
         budget.state = 'overlimit'
         budget.save()
     else:
         # Buscamos o creamos la alerta
-        alert, created = Alert.objects.get_or_create(
-            user=instance.user,
-            alert_type='budget',
-            title=f"Presupuesto al límite: {budget.category.name}",
-            defaults={
-                'message': (
-                    f"Has gastado {spent:.2f}{budget.user.profile.currency} "
-                    f"({(spent / budget.amount) * 100:.1f}%) "
-                    f"del presupuesto {period_description}"
-                )
-            }
-        )
+        if notifications:
+            alert, created = Alert.objects.get_or_create(
+                user=instance.user,
+                alert_type='budget',
+                title=f"Presupuesto al límite: {budget.category.name}",
+                defaults={
+                    'message': (
+                        f"Has gastado {spent:.2f}{budget.user.profile.currency} "
+                        f"({(spent / budget.amount) * 100:.1f}%) "
+                        f"del presupuesto {period_description}"
+                    )
+                }
+            )
         budget.state = 'limit'
         budget.save()
 
     # Vinculamos TODAS las transacciones del período
-    if created:
-        alert.transactions.set(transactions)
-    else:
-        # Actualizamos transacciones si la alerta ya existía
-        current_transactions = set(alert.transactions.all())
-        new_transactions = set(transactions) - current_transactions
-        if new_transactions:
-            alert.transactions.add(*new_transactions)
+    if notifications:
+        if created:
+            alert.transactions.set(transactions)
+        else:
+            # Actualizamos transacciones si la alerta ya existía
+            current_transactions = set(alert.transactions.all())
+            new_transactions = set(transactions) - current_transactions
+            if new_transactions:
+                alert.transactions.add(*new_transactions)
 
 
 # Alertas para pagos recurrentes (verifica diariamente)
 @receiver(post_save, sender=RecurringPayment)
 def check_recurring_payment_alerts(sender, instance, **kwargs):
-    if instance.next_due_date <= timezone.now().date() + timedelta(days=instance.reminder_days):
-        Alert.objects.get_or_create(
-            user=instance.user,
-            title=f"Pago próximo: {instance.name}",
-            message=f"Se cobrarán {instance.amount:.2f} el {instance.next_due_date.strftime('%d/%m/%Y')}",
-            alert_type='payment',
-            defaults={'read': False}
-        )
+    notifications = instance.user.profile.notification_app
+    if notifications:
+        if instance.next_due_date <= timezone.now().date() + timedelta(days=instance.reminder_days):
+            Alert.objects.get_or_create(
+                user=instance.user,
+                title=f"Pago próximo: {instance.name}",
+                message=f"Se cobrarán {instance.amount:.2f} el {instance.next_due_date.strftime('%d/%m/%Y')}",
+                alert_type='payment',
+                defaults={'read': False}
+            )
 
 
 # Alertas para metas
@@ -122,22 +129,25 @@ def check_goal_completion(sender, instance, created, **kwargs):
     """
     Signal que verifica si se alcanzó el objetivo y crea una alerta.
     """
-    if not created:  # Solo para actualizaciones (no creación inicial)
-        if instance.current_amount >= instance.target_amount and instance.status == 'completed':
-            # Verificar si ya existe una alerta para evitar duplicados
-            existing_alert = Alert.objects.filter(
-                user=instance.user,
-                alert_type='goal',
-                title=f"Meta alcanzada: {instance.subject}"
-            ).exists()
+    notifications = instance.user.profile.notification_app
 
-            if not existing_alert:
-                Alert.objects.create(
+    if notifications:
+        if not created:  # Solo para actualizaciones (no creación inicial)
+            if instance.current_amount >= instance.target_amount and instance.status == 'completed':
+                # Verificar si ya existe una alerta para evitar duplicados
+                existing_alert = Alert.objects.filter(
                     user=instance.user,
-                    title=f"Meta alcanzada: {instance.subject}",
-                    message=f"¡Felicidades! Has alcanzado tu meta de {instance.target_amount} {instance.user.profile.currency} para '{instance.subject}'.",
-                    alert_type='goal'
-                )
+                    alert_type='goal',
+                    title=f"Meta alcanzada: {instance.subject}"
+                ).exists()
+
+                if not existing_alert:
+                    Alert.objects.create(
+                        user=instance.user,
+                        title=f"Meta alcanzada: {instance.subject}",
+                        message=f"¡Felicidades! Has alcanzado tu meta de {instance.target_amount} {instance.user.profile.currency} para '{instance.subject}'.",
+                        alert_type='goal'
+                    )
 
 
 # Modificación de estado de presupuesto y borrado de alerta al borrar una transacción
