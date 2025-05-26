@@ -224,6 +224,12 @@ class RecurringPaymentForm(forms.ModelForm):
         self.user = kwargs.pop('user', None)
         super().__init__(*args, **kwargs)
 
+        # Filtrar categorías para mostrar solo las de gastos (is_expense=True)
+        if self.user and 'category' in self.fields:
+            self.fields['category'].queryset = Category.objects.filter(
+                is_expense=True
+            ).order_by('name')
+
     def clean(self):
         cleaned_data = super().clean()
         start_date = cleaned_data.get('start_date')
@@ -233,8 +239,7 @@ class RecurringPaymentForm(forms.ModelForm):
         if end_date and start_date and end_date < start_date:
             raise ValidationError("La fecha de fin debe ser posterior a la de inicio")
 
-
-        if next_due_date < start_date:
+        if next_due_date and start_date and next_due_date < start_date:
             raise ValidationError("La próxima fecha de pago no puede ser anterior a la fecha de inicio")
 
         return cleaned_data
@@ -258,6 +263,12 @@ class RecurringIncomeForm(forms.ModelForm):
 
         if self.user:
             self.fields['category'].queryset = Category.objects.all()
+
+        # Filtrar categorías para mostrar solo las de ingresos (is_expense=False)
+        if self.user and 'category' in self.fields:
+            self.fields['category'].queryset = Category.objects.filter(
+                is_expense=False
+            ).order_by('name')
 
     def clean(self):
         cleaned_data = super().clean()
