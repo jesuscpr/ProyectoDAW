@@ -1,46 +1,60 @@
 {% extends 'base.html' %}
 
+{% block title %}Crear transacción{% endblock %}
+
 {% block style %}
 <style>
-    /* Estilos para los botones de gasto */
+    /* Estilos para los botones de gasto/ingreso (mantenidos igual) */
     .btn-check:checked + .btn-outline-danger {
-        background-color: #dc3545;  /* Rojo de Bootstrap */
+        background-color: #dc3545;
         color: white;
         border-color: #dc3545;
     }
     
-    /* Estilos para los botones de ingreso */
     .btn-check:checked + .btn-outline-success {
-        background-color: #198754;  /* Verde de Bootstrap */
+        background-color: #198754;
         color: white;
         border-color: #198754;
+    }
+    
+    /* Estilos consistentes para el resto del formulario */
+    .form-control:focus, .form-select:focus {
+        border-color: #4e73df;
+        box-shadow: 0 0 0 0.25rem rgba(78, 115, 223, 0.25);
+    }
+    
+    .input-group-currency {
+        height: 38px;
+    }
+    
+    .input-group-currency .input-group-text {
+        height: 100%;
+        display: flex;
+        align-items: center;
+        background-color: #f8f9fa;
     }
 </style>
 {% endblock %}
 
 {% block content %}
-<div class="container mt-4">
+<div class="container py-5">
     <div class="row justify-content-center">
-        <div class="col-md-8">
-            <div class="card">
-                <div class="card-header bg-primary text-white">
-                    <h4 class="mb-0">
-                        Registrar Transacción
-                    </h4>
+        <div class="col-lg-8 col-md-10">
+            <div class="card shadow-lg border-0 rounded-3">
+                <div class="card-header bg-primary text-white py-3">
+                    <h2 class="h4 mb-0 text-center">Registrar Transacción</h2>
                 </div>
-                <div class="card-body">
-                    <form method="post">
+                <div class="card-body p-4 p-md-5">
+                    <form method="post" class="needs-validation" novalidate>
                         {% csrf_token %}
                         
-                        <!-- Tipo de transacción -->
-                        <div class="mb-3">
-                            <label class="form-label">{{ form.is_expense.label }}</label>
+                        <!-- Tipo de transacción (mantenido igual) -->
+                        <div class="mb-4">
+                            <label class="form-label mb-1 fw-semibold">{{ form.is_expense.label }}</label>
                             <div class="form-check p-0" role="group">
-                                <!-- Botón de Gasto -->
                                 <input type="radio" class="btn-check" name="is_expense" id="id_is_expense_0" value="True" {% if form.is_expense.value == True %}checked{% endif %}>
                                 <label for="id_is_expense_0" class="btn btn-outline-danger">Gasto</label>
                                 
-                                <!-- Botón de Ingreso -->
                                 <input type="radio" class="btn-check" name="is_expense" id="id_is_expense_1" value="False" {% if form.is_expense.value == False %}checked{% endif %}>
                                 <label for="id_is_expense_1" class="btn btn-outline-success">Ingreso</label>
                             </div>
@@ -52,12 +66,12 @@
                         </div>
                         
                         <!-- Monto -->
-                        <div class="mb-3">
-                            <label for="{{ form.amount.id_for_label }}" class="form-label">
+                        <div class="mb-4">
+                            <label for="{{ form.amount.id_for_label }}" class="form-label mb-1 fw-semibold">
                                 {{ form.amount.label }}
                             </label>
-                            <div class="input-group">
-                                <span class="input-group-text">{{ request.user.profile.currency }}</span>
+                            <div class="input-group input-group-currency">
+                                <span class="input-group-text mt-1">{{ request.user.profile.currency }}</span>
                                 {{ form.amount }}
                             </div>
                             {% if form.amount.errors %}
@@ -68,18 +82,11 @@
                         </div>
                         
                         <!-- Categoría -->
-                        <div class="mb-3">
-                            <label for="{{ form.category.id_for_label }}" class="form-label">
+                        <div class="mb-4">
+                            <label for="{{ form.category.id_for_label }}" class="form-label mb-1 fw-semibold">
                                 {{ form.category.label }}
                             </label>
-                            <select name="{{ form.category.name }}" id="{{ form.category.id_for_label }}" class="form-select">
-                                <option value="">---------</option>
-                                {% for cat in form.fields.category.queryset %}
-                                    <option value="{{ cat.id }}" {% if form.category.value == cat.id %}selected{% endif %}>
-                                        {{ cat.name }}
-                                    </option>
-                                {% endfor %}
-                            </select>
+                            {{ form.category }}
                             {% if form.category.errors %}
                                 <div class="invalid-feedback d-block">
                                     {{ form.category.errors|join:", " }}
@@ -88,8 +95,8 @@
                         </div>
                         
                         <!-- Fecha -->
-                        <div class="mb-3">
-                            <label for="{{ form.date.id_for_label }}" class="form-label">
+                        <div class="mb-4">
+                            <label for="{{ form.date.id_for_label }}" class="form-label mb-1 fw-semibold">
                                 {{ form.date.label }}
                             </label>
                             {{ form.date }}
@@ -101,8 +108,8 @@
                         </div>
                         
                         <!-- Descripción -->
-                        <div class="mb-3">
-                            <label for="{{ form.description.id_for_label }}" class="form-label">
+                        <div class="mb-4">
+                            <label for="{{ form.description.id_for_label }}" class="form-label mb-1 fw-semibold">
                                 {{ form.description.label }}
                             </label>
                             {{ form.description }}
@@ -113,12 +120,13 @@
                             {% endif %}
                         </div>
                         
-                        <div class="d-grid gap-2 d-md-flex justify-content-md-end">
-                            <a href="{% url 'pfinance:transactions_list' %}" class="btn btn-secondary me-md-2">
-                                <i class="bi bi-x-circle me-1"></i> Cancelar
+                        <!-- Botones -->
+                        <div class="d-grid gap-2 d-md-flex justify-content-md-end mt-4">
+                            <a href="{% url 'pfinance:transactions_list' %}" class="btn btn-secondary me-md-2 px-4 py-2">
+                                <i class="bi bi-x-circle me-2"></i>Cancelar
                             </a>
-                            <button type="submit" class="btn btn-primary">
-                                <i class="bi bi-save me-1"></i> Guardar
+                            <button type="submit" class="btn btn-primary px-4 py-2">
+                                <i class="bi bi-save me-2"></i>Guardar
                             </button>
                         </div>
                     </form>
@@ -131,11 +139,11 @@
 
 {% block js %}
 <script>
+// JavaScript se mantiene igual
 document.addEventListener('DOMContentLoaded', function() {
     const expenseRadios = document.querySelectorAll('input[name="is_expense"]');
     const categorySelect = document.getElementById('{{ form.category.id_for_label }}');
     
-    // Todas las categorías pasadas desde Django
     const allCategories = [
         {% for cat in categories %}
         {
@@ -147,25 +155,17 @@ document.addEventListener('DOMContentLoaded', function() {
         {% endfor %}
     ];
 
-    // Función para filtrar y mostrar categorías
     function updateCategories() {
         const isExpense = document.querySelector('input[name="is_expense"]:checked').value === 'True';
-        
-        // Filtrar categorías según el tipo
-        const filteredCategories = allCategories.filter(cat => 
-            cat.is_expense === isExpense
-        );
+        const filteredCategories = allCategories.filter(cat => cat.is_expense === isExpense);
 
-        // Limpiar y repoblar el select
         categorySelect.innerHTML = '';
         
-        // Añadir opción vacía inicial (opcional)
         const emptyOption = document.createElement('option');
         emptyOption.value = '';
         emptyOption.textContent = '---------';
         categorySelect.appendChild(emptyOption);
 
-        // Añadir categorías filtradas
         filteredCategories.forEach(cat => {
             const option = document.createElement('option');
             option.value = cat.id;
@@ -175,12 +175,10 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
-    // Escuchar cambios en los radios
     expenseRadios.forEach(radio => {
         radio.addEventListener('change', updateCategories);
     });
 
-    // Ejecutar al cargar la página
     updateCategories();
 });
 </script>
