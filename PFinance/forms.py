@@ -283,6 +283,7 @@ class RecurringIncomeForm(forms.ModelForm):
             raise ValidationError("La próxima fecha de ingreso no puede ser anterior a la fecha de inicio")
 
 
+# Formulario para metas
 class GoalForm(forms.ModelForm):
     """Formulario base para crear/editar metas (no usado en la actualización de cantidad)"""
 
@@ -301,6 +302,7 @@ class GoalForm(forms.ModelForm):
         })
 
 
+# Formulario para actualizar el monto de las metas
 class GoalAmountUpdateForm(forms.ModelForm):
     """Formulario exclusivo para actualizar el monto acumulado"""
 
