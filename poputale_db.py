@@ -17,6 +17,12 @@ from PFinance.models import (
 
 def create_users():
     # Crear usuarios
+    admin = User.objects.create_superuser(
+        username='admin',
+        email='admin@admin.com',
+        password='admin'
+    )
+
     user1 = User.objects.create_user(
         username='juan',
         email='juan@example.com',
@@ -27,6 +33,7 @@ def create_users():
 
     # Crear perfiles de usuario
     UserProfile.objects.create(user=user1, currency='EUR', notification_app=True)
+    UserProfile.objects.create(user=admin, currency='EUR', notification_app=True)
 
     return user1
 
