@@ -11,6 +11,7 @@ https://docs.djangoproject.com/en/5.1/ref/settings/
 """
 
 import os
+from celery.schedules import crontab
 from pathlib import Path
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -144,4 +145,13 @@ DEFAULT_FROM_EMAIL = 'noreply@planmytrip.com'
 
 
 # Celery
-
+CELERY_BEAT_SCHEDULE = {
+    'process_recurring_incomes': {
+        'task': 'PFinance.tasks.process_recurring_incomes',
+        'schedule': crontab(hour=14, minute=0),  # Ejecutar cada día a las 14:00 horario UTC
+    },
+    'process_recurring_payments':{
+        'task': 'PFinance.tasks.process_recurring_payments',
+        'schedule': crontab(hour=14, minute=0),  # Ejecutar cada día a las 14:00 horario UTC
+    }
+}
