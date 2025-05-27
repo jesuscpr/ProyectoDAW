@@ -22,6 +22,7 @@ def create_users():
         email='admin@admin.com',
         password='admin'
     )
+
     user1 = User.objects.create_user(
         username='juan',
         email='juan@example.com',
