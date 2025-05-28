@@ -16,37 +16,37 @@
             <!-- Menú Central -->
             <ul class="navbar-nav mx-auto mb-2 mb-lg-0">
                 <li class="nav-item">
-                    <a class="nav-link" href="{% url 'pfinance:dashboard' %}">
+                    <a class="nav-link {% if request.path == '/dashboard/' %}active border-bottom border-primary{% endif %}" href="{% url 'pfinance:dashboard' %}">
                         <i class="bi bi-house-door me-1"></i>Panel
                     </a>
                 </li>
                 <li class="nav-item">
-                    <a class="nav-link" href="{% url 'pfinance:transactions_list' %}">
+                    <a class="nav-link {% if request.path == '/transactions/' %}active border-bottom border-primary{% endif %}" href="{% url 'pfinance:transactions_list' %}">
                         <i class="bi bi-arrow-left-right me-1"></i> Transacciones
                     </a>
                 </li>
                 <li class="nav-item">
-                    <a class="nav-link" href="{% url 'pfinance:budgets_list' %}">
+                    <a class="nav-link {% if request.path == '/budgets/' %}active border-bottom border-primary{% endif %}" href="{% url 'pfinance:budgets_list' %}">
                         <i class="bi bi-wallet2 me-1"></i> Presupuestos
                     </a>
                 </li>
                 <li class="nav-item">
-                    <a class="nav-link" href="{% url 'pfinance:alerts' %}">
+                    <a class="nav-link {% if request.path == '/alerts/' %}active border-bottom border-primary{% endif %}" href="{% url 'pfinance:alerts' %}">
                         <i class="bi bi-exclamation-triangle me-1"></i> Alertas
                     </a>
                 </li>
                 <li class="nav-item">
-                    <a class="nav-link" href="{% url 'pfinance:recurring_payments' %}">
+                    <a class="nav-link {% if request.path == '/recurring-payments/' %}active border-bottom border-primary{% endif %}" href="{% url 'pfinance:recurring_payments' %}">
                         <i class="bi bi-arrow-repeat me-1"></i> Pagos Recurrentes
                     </a>
                 </li>
                 <li class="nav-item">
-                    <a class="nav-link" href="{% url 'pfinance:recurring_income_list' %}">
+                    <a class="nav-link {% if request.path == '/recurring-incomes/' %}active border-bottom border-primary{% endif %}" href="{% url 'pfinance:recurring_income_list' %}">
                         <i class="bi bi-cash-stack me-1"></i> Ingresos Recurrentes
                     </a>
                 </li>
                 <li class="nav-item">
-                    <a class="nav-link" href="{% url 'pfinance:goals_list' %}">
+                    <a class="nav-link {% if request.path == '/goals/' %}active border-bottom border-primary{% endif %}" href="{% url 'pfinance:goals_list' %}">
                         <i class="bi bi-trophy me-1"></i> Metas
                     </a>
                 </li>
@@ -109,9 +109,13 @@
 
                     <!-- Perfil Usuario -->
                     <li class="nav-item dropdown">
-                        <a class="nav-link dropdown-toggle d-flex align-items-center" href="#" id="userDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                        <a class="nav-link dropdown-toggle d-flex align-items-center {% if request.path == '/profile/' or request.path == '/profile/edit/' %}active border-bottom border-primary{% endif %}" href="#" id="userDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
                             <span class="me-2">{{ user.username }}</span>
-                            <i class="bi bi-person-circle"></i>
+                            {% if user.profile.foto_perfil %}
+                                <img src="{{ user.profile.foto_perfil.url }}" alt="Foto de perfil" class="rounded-circle me-1" style="width: 32px; height: 32px; object-fit: cover;">
+                            {% else %}
+                                <i class="bi bi-person-circle"></i>
+                            {% endif %}
                         </a>
                         <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="userDropdown">
                             <li>

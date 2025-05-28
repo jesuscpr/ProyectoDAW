@@ -125,6 +125,10 @@ USE_TZ = True
 
 STATIC_URL = '/static/'
 
+# Media files
+MEDIA_URL = '/media/'
+MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
+
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.1/ref/settings/#default-auto-field
 
@@ -132,7 +136,7 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 AUTH_USER_MODEL = 'auth.User'
 LOGIN_URL = '/login/'
-LOGIN_REDIRECT_URL = '/'
+LOGIN_REDIRECT_URL = '/dashboard/'
 LOGOUT_REDIRECT_URL = '/logout/'
 
 
@@ -150,10 +154,10 @@ CELERY_BROKER_URL = 'redis://redis:6379/0'
 CELERY_BEAT_SCHEDULE = {
     'process_recurring_incomes': {
         'task': 'PFinance.tasks.process_recurring_incomes',
-        'schedule': crontab(hour=0, minute=0),  # Ejecutar cada día a las 00:00
+        'schedule': crontab(hour=20, minute=40),  # Ejecutar cada día a las 00:00
     },
     'process_recurring_payments':{
         'task': 'PFinance.tasks.process_recurring_payments',
-        'schedule': crontab(hour=0, minute=0),  # Ejecutar cada día a las 00:00
+        'schedule': crontab(hour=20, minute=40),  # Ejecutar cada día a las 00:00
     }
 }

@@ -35,6 +35,7 @@ class UserProfile(models.Model):
     currency = models.CharField(max_length=3, choices=CURRENCY_CHOICES, default='EUR')
     # notification_email = models.BooleanField(default=True) (Próximamente)
     notification_app = models.BooleanField(default=True)
+    foto_perfil = models.ImageField(upload_to="perfiles/", null=True, blank=True)
 
     def __str__(self):
         return f"Perfil de {self.user.username}"

@@ -89,14 +89,26 @@ class ProfileEditForm(forms.ModelForm):
         widget=forms.EmailInput(attrs={'class': 'form-control'})
     )
 
+    foto_perfil = forms.ImageField(
+        required=False,
+        widget=forms.FileInput(attrs={
+            'class': 'form-control',
+            'accept': 'image/*',
+            'style': 'display:none;',  # oculta el input file
+            'id': 'fileInput'  # para referenciarlo en JS
+        }),
+        help_text="Sube una imagen para tu perfil"
+    )
+
     class Meta:
         model = UserProfile
-        fields = ['email', 'currency', 'notification_app']
+        fields = ['email', 'currency', 'notification_app', 'foto_perfil']
         labels = {
             'email': 'Correo electrónico',
             'monthly_income': 'Ingreso mensual',
             'currency': 'Moneda',
-            'notification_app': 'Recibir notificaciones en la app'
+            'notification_app': 'Recibir notificaciones en la app',
+            'foto_perfil': 'Foto de perfil'
         }
         widgets = {
             'currency': forms.Select(attrs={'class': 'form-select'}),
@@ -108,6 +120,7 @@ class ProfileEditForm(forms.ModelForm):
         self.fields['email'].label = "Correo electrónico"
         self.fields['currency'].label = 'Moneda'
         self.fields['notification_app'].label = 'Recibir notificaciones en la app'
+        self.fields['foto_perfil'].label = 'Foto de perfil'
         if self.instance and hasattr(self.instance, 'user'):
             self.fields['email'].initial = self.instance.user.email
 

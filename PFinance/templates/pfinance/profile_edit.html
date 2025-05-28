@@ -12,8 +12,35 @@
                     <h4 class="mb-0">Editar perfil</h4>
                 </div>
                 <div class="card-body">
-                    <form method="post" novalidate>
+                    <form method="post" enctype="multipart/form-data" novalidate>
                         {% csrf_token %}
+                    
+                        <!-- Foto de perfil -->
+                        <div class="mb-3">
+                            <label for="{{ form.foto_perfil.id_for_label }}" class="form-label fw-semibold">{{ form.foto_perfil.label }}</label>
+                        
+                            {% if form.foto_perfil.value %}
+                                <div class="d-flex justify-content-center mb-4">
+                                    <img id="preview" src="{{ form.foto_perfil.value.url }}" class="rounded-circle border border-1 border-black" alt="Foto de perfil" style="width: 180px; height: 180px; object-fit: cover;">
+                                </div>
+                            {% else %}
+                                <div class="d-flex justify-content-center mb-4">
+                                    <img id="preview" src="{% static 'logo.png' %}" class="rounded-circle border border-4" alt="Foto predeterminada" style="width: 180px; height: 180px; object-fit: cover;">
+                                </div>
+                            {% endif %}
+                        
+                            {{ form.foto_perfil }}
+                        
+                            <button type="button" class="btn btn-primary" onclick="document.getElementById('fileInput').click();">
+                                Cambiar imagen de perfil
+                            </button>
+                        
+                            {% if form.foto_perfil.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {{ form.foto_perfil.errors|join:", " }}
+                                </div>
+                            {% endif %}
+                        </div>
                         
                         <!-- Email -->
                         <div class="mb-3">
@@ -64,4 +91,23 @@
         </div>
     </div>
 </div>
+{% endblock %}
+
+{% block js %}
+<script>
+    const inputFile = document.getElementById('fileInput');
+    const previewImg = document.getElementById('preview');
+
+    inputFile.addEventListener('change', () => {
+        if (inputFile.files && inputFile.files[0]) {
+            const reader = new FileReader();
+
+            reader.onload = e => {
+                previewImg.src = e.target.result;
+            }
+
+            reader.readAsDataURL(inputFile.files[0]);
+        }
+    });
+</script>
 {% endblock %}
