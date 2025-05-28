@@ -113,7 +113,7 @@ AUTH_PASSWORD_VALIDATORS = [
 
 LANGUAGE_CODE = 'en-us'
 
-TIME_ZONE = 'UTC'
+TIME_ZONE = 'Europe/Madrid'
 
 USE_I18N = True
 
@@ -145,15 +145,15 @@ DEFAULT_FROM_EMAIL = 'noreply@planmytrip.com'
 
 
 # Celery
-CELERY_TIMEZONE = 'UTC'
+CELERY_TIMEZONE = 'Europe/Madrid'
 CELERY_BROKER_URL = 'redis://redis:6379/0'
 CELERY_BEAT_SCHEDULE = {
     'process_recurring_incomes': {
         'task': 'PFinance.tasks.process_recurring_incomes',
-        'schedule': crontab(hour=0, minute=0),  # Ejecutar cada día a las 00:00 horario UTC
+        'schedule': crontab(hour=0, minute=0),  # Ejecutar cada día a las 00:00
     },
     'process_recurring_payments':{
         'task': 'PFinance.tasks.process_recurring_payments',
-        'schedule': crontab(hour=0, minute=0),  # Ejecutar cada día a las 00:00 horario UTC
+        'schedule': crontab(hour=0, minute=0),  # Ejecutar cada día a las 00:00
     }
 }
