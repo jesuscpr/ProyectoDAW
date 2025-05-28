@@ -46,5 +46,46 @@ services:
       MP_SMTP_AUTH_ALLOW_INSECURE: 1
     restart: unless-stopped
 
+  redis:
+    image: redis:7
+    container_name: redis
+    ports:
+      - "6379:6379"
+    restart: unless-stopped
+
+  celery:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: celery_worker
+    command: celery -A ProyectoDAW worker --loglevel=info
+    volumes:
+      - .:/app
+    depends_on:
+      - web
+      - db
+      - redis
+    environment:
+      - DATABASE_URL=postgres://postgres:password@db:5432/django_db
+      - CELERY_BROKER_URL=redis://redis:6379/0
+    restart: unless-stopped
+
+  celery-beat:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: celery_beat
+    command: celery -A ProyectoDAW beat --loglevel=info
+    volumes:
+      - .:/app
+    depends_on:
+      - web
+      - db
+      - redis
+    environment:
+      - DATABASE_URL=postgres://postgres:password@db:5432/django_db
+      - CELERY_BROKER_URL=redis://redis:6379/0
+    restart: unless-stopped
+
 volumes:
   postgres_data:
