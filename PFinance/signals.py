@@ -3,7 +3,7 @@ from django.db.models.signals import post_save, post_delete
 from django.dispatch import receiver
 from django.utils import timezone
 
-from .models import Transaction, Budget, RecurringPayment, Alert, Goal
+from .models import Transaction, Budget, RecurringPayment, Alert, Goal, RecurringIncome
 from datetime import timedelta
 from decimal import Decimal
 
@@ -108,7 +108,7 @@ def create_budget_alert(sender, instance, created, **kwargs):
                 alert.transactions.add(*new_transactions)
 
 
-# Alertas para pagos recurrentes (verifica diariamente)
+# Alertas para pagos recurrentes
 @receiver(post_save, sender=RecurringPayment)
 def check_recurring_payment_alerts(sender, instance, **kwargs):
     notifications = instance.user.profile.notification_app
@@ -117,7 +117,7 @@ def check_recurring_payment_alerts(sender, instance, **kwargs):
             Alert.objects.get_or_create(
                 user=instance.user,
                 title=f"Pago próximo: {instance.name}",
-                message=f"Se cobrarán {instance.amount:.2f} el {instance.next_due_date.strftime('%d/%m/%Y')}",
+                message=f"Se cobrarán {instance.amount:.2f} {instance.user.profile.currency} el {instance.next_due_date.strftime('%d/%m/%Y')}",
                 alert_type='payment',
                 defaults={'read': False}
             )
@@ -221,4 +221,18 @@ def update_budget_on_transaction_delete(sender, instance, **kwargs):
 
     budget.save()
 
+
+# Alertas para ingresos recurrentes
+@receiver(post_save, sender=RecurringIncome)
+def check_recurring_income_alerts(sender, instance, **kwargs):
+    notifications = instance.user.profile.notification_app
+    if notifications:
+        if instance.next_income_date <= timezone.now().date() + timedelta(days=3):
+            Alert.objects.get_or_create(
+                user=instance.user,
+                title=f"Ingreso próximo: {instance.name}",
+                message=f"Se cobrarán {instance.amount:.2f} {instance.user.profile.currency} el {instance.next_income_date.strftime('%d/%m/%Y')}",
+                alert_type='payment',
+                defaults={'read': False}
+            )
 

@@ -176,7 +176,7 @@ class RecurringPayment(models.Model):
             user=self.user,
             amount=self.amount,
             category=self.category,
-            date=date.today(),
+            date=timezone.now(),
             description=f"Pago recurrente: {self.name}",
             is_expense=True
         )
@@ -187,11 +187,11 @@ class RecurringPayment(models.Model):
             transaction = self.create_transaction()
             self.update_next_due_date()
 
-            # Opcional: Crear alerta
+            # Crear alerta
             Alert.objects.create(
                 user=self.user,
                 title=f"Pago automático: {self.name}",
-                message=f"Se ha procesado el pago de {self.amount}",
+                message=f"Se ha procesado el pago de {self.amount} {self.user.profile.currency}",
                 alert_type='payment'
             )
 
@@ -221,7 +221,9 @@ class Alert(models.Model):
 
     ALERT_TYPES = [
         ('budget', 'Límite de presupuesto'),
-        ('payment', 'Pago recurrente'),
+        ('payment', 'Pago'),
+        ('income', 'Ingreso'),
+        ('reminder', 'Recordatorio'),
         ('goal', 'Objetivo financiero'),
         ('system', 'Sistema'),
     ]
@@ -304,7 +306,7 @@ class RecurringIncome(models.Model):
             user=self.user,
             amount=self.amount,
             category=self.category,
-            date=date.today(),
+            date=timezone.now(),
             description=f"Ingreso recurrente: {self.name}",
             is_expense=False  # ¡Importante! Diferencia clave vs pagos
         )

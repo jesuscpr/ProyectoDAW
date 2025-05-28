@@ -38,7 +38,7 @@ class Command(BaseCommand):
                 if transaction:
                     self.stdout.write(
                         f"Transacción #{transaction.id} para {payment.name} "
-                        f"(Monto: {payment.amount}, Próximo pago: {payment.next_due_date})"
+                        f"(Monto: {payment.amount} {payment.user.profile.currency}, Próximo pago: {payment.next_due_date})"
                     )
                     success_count += 1
             except Exception as e:
@@ -65,8 +65,7 @@ class Command(BaseCommand):
                         user=payment.user,
                         title=f"Recordatorio de pago: {payment.name}",
                         message=(
-                            f"Se cobrarán {payment.amount} el {payment.next_due_date}. "
-                            f"Frecuencia: {payment.get_frequency_display()}"
+                            f"Se cobrarán {payment.amount}{payment.user.profile.currency} el {payment.next_due_date}. "
                         ),
                         alert_type='payment'
                     )
