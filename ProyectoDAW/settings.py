@@ -149,10 +149,10 @@ CELERY_TIMEZONE = 'UTC'
 CELERY_BEAT_SCHEDULE = {
     'process_recurring_incomes': {
         'task': 'PFinance.tasks.process_recurring_incomes',
-        'schedule': crontab(hour=14, minute=0),  # Ejecutar cada día a las 14:00 horario UTC
+        'schedule': crontab(hour=0, minute=0),  # Ejecutar cada día a las 00:00 horario UTC
     },
     'process_recurring_payments':{
         'task': 'PFinance.tasks.process_recurring_payments',
-        'schedule': crontab(hour=14, minute=0),  # Ejecutar cada día a las 14:00 horario UTC
+        'schedule': crontab(hour=0, minute=0),  # Ejecutar cada día a las 00:00 horario UTC
     }
 }
