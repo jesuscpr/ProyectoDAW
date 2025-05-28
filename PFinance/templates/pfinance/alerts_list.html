@@ -18,7 +18,7 @@
             <div class="alert {% if not alert.read %}alert-info{% else %}alert-light{% endif %} mb-3">
                 <div class="d-flex justify-content-between">
                     <h5>
-                        <i class="bi bi-{% if alert.alert_type == 'budget' %}graph-down-arrow{% elif alert.alert_type == 'payment' %}calendar-check{% elif alert.alert_type == 'goal' %}trophy{% else %}info-circle{% endif %} me-2"></i>
+                        <i class="bi bi-{% if alert.alert_type == 'budget' %}graph-down-arrow{% elif alert.alert_type == 'payment' %}calendar-check{% elif alert.alert_type == 'goal' %}trophy{% elif alert.alert_type == 'income' %}cash-coin{% elif alert.alert_type == 'reminder' %}clock{% else %}info-circle{% endif %} me-2"></i>
                         {{ alert.title }}
                     </h5>
                     {% if not alert.read %}

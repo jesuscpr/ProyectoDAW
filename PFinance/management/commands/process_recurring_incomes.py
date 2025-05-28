@@ -1,6 +1,6 @@
 from django.core.management.base import BaseCommand
 from django.utils import timezone
-from PFinance.models import RecurringIncome, Alert
+from PFinance.models import RecurringIncome, Alert, UserProfile
 from datetime import timedelta
 
 
@@ -25,7 +25,7 @@ class Command(BaseCommand):
                 if transaction:
                     self.stdout.write(
                         f"Ingreso creado: {income.name} "
-                        f"(Monto: {income.amount}, "
+                        f"(Monto: {income.amount}{income.user.profile.currency}, "
                         f"Próximo: {income.next_income_date})"
                     )
                     success_count += 1
@@ -34,7 +34,7 @@ class Command(BaseCommand):
                     Alert.objects.create(
                         user=income.user,
                         title=f"Ingreso registrado: {income.name}",
-                        message=f"Se ha ingresado {income.amount} ({income.get_source_display()})",
+                        message=f"Se ha ingresado {income.amount} {income.user.profile.currency} ({income.get_source_display()})",
                         alert_type='income'
                     )
             except Exception as e:
