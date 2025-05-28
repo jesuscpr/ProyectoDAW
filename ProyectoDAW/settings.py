@@ -145,6 +145,7 @@ DEFAULT_FROM_EMAIL = 'noreply@planmytrip.com'
 
 
 # Celery
+CELERY_TIMEZONE = 'UTC'
 CELERY_BEAT_SCHEDULE = {
     'process_recurring_incomes': {
         'task': 'PFinance.tasks.process_recurring_incomes',
