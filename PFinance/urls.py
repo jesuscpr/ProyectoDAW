@@ -7,11 +7,12 @@ from . import views
 app_name = 'pfinance'
 
 urlpatterns = [
-    # Autenticación y dashboard
-    path("dashboard/", views.DashboardView.as_view(), name="dashboard"),
+    # Autenticación, dashboard y landing page
+    path('dashboard/', views.DashboardView.as_view(), name="dashboard"),
     path('register/', views.SignUpView.as_view(template_name='registration/register.html'), name='register'),
     path('login/', LoginView.as_view(template_name='registration/login.html'), name='login'),
     path('logout/', LogoutView.as_view(template_name='registration/logout.html'), name='logout'),
+    path('', views.LandingPageView.as_view(), name="landing"),
 
 
     # Perfil
