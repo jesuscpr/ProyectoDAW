@@ -23,6 +23,30 @@ CURRENCY_SYMBOLS = {
     'JPY': '¥'
 }
 
+# Vista para la página principal (landing page)
+class LandingPageView(TemplateView):
+    template_name = 'pfinance/landing.html'
+
+    def dispatch(self, request, *args, **kwargs):
+        # Redirige a usuarios autenticados a su dashboard
+        if request.user.is_authenticated:
+            return redirect('pfinance:dashboard')  # Cambia 'dashboard' por tu vista principal
+        return super().dispatch(request, *args, **kwargs)
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        # Puedes añadir contexto adicional aquí si lo necesitas
+        context['features'] = [
+            {
+                'title': 'Registro de transacciones',
+                'description': 'Clasifica tus ingresos y gastos fácilmente',
+                'image': 'images/feature-transactions.png'
+            },
+            # Añade más features si lo deseas
+        ]
+        return context
+
+
 # Vista para el panel
 class DashboardView(LoginRequiredMixin, TemplateView):
     model = UserProfile
