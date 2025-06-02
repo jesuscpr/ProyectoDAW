@@ -35,14 +35,13 @@ class LandingPageView(TemplateView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        # Puedes añadir contexto adicional aquí si lo necesitas
+
         context['features'] = [
             {
                 'title': 'Registro de transacciones',
                 'description': 'Clasifica tus ingresos y gastos fácilmente',
-                'image': 'images/feature-transactions.png'
+                'image': 'logo.png'
             },
-            # Añade más features si lo deseas
         ]
         return context
 

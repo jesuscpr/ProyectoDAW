@@ -2,10 +2,10 @@
 <header class="navbar navbar-expand-lg sticky-top" style="background-color: #f3f4f6">
     <div class="container-fluid">
         <!-- Logo/Botón Dashboard -->
-        <a class="navbar-brand d-flex align-items-center me-auto p-0" href="{% url 'pfinance:dashboard' %}">
+        <a class="navbar-brand d-flex align-items-center me-auto p-0" href="{% url 'pfinance:landing' %}">
             <img alt="logo" src="{% static 'logo.png' %}" width="50rem">
         </a>
-
+        {% if user.is_authenticated %}
         <!-- Botón Hamburguesa -->
         <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarContent">
             <span class="navbar-toggler-icon"></span>
@@ -54,87 +54,88 @@
 
             <!-- Menú Usuario -->
             <ul class="navbar-nav">
-                {% if user.is_authenticated %}
-                    <!-- Alertas -->
-                    <li class="nav-item dropdown me-2">
-                        <a class="nav-link position-relative" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false" id="alertsDropdown">
-                            <i class="bi bi-bell-fill"></i>
-                            {% if unread_count > 0 %}
-                                <span class="position-absolute top-4 start-99 translate-middle badge rounded-pill bg-primary" style="font-size: 0.6em;">
-                                        {{ unread_count }}
-                                    </span>
-                            {% endif %}
-                        </a>
-                        <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="alertsDropdown">
+                <!-- Alertas -->
+                <li class="nav-item dropdown me-2">
+                    <a class="nav-link position-relative" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false" id="alertsDropdown">
+                        <i class="bi bi-bell-fill"></i>
+                        {% if unread_count > 0 %}
+                            <span class="position-absolute top-4 start-99 translate-middle badge rounded-pill bg-primary" style="font-size: 0.6em;">
+                                    {{ unread_count }}
+                                </span>
+                        {% endif %}
+                    </a>
+                    <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="alertsDropdown">
 
-                            <li class="dropdown-header fw-bold px-3 py-2">Tus Alertas</li>
-                            
-                            {% if recent_alerts %}
-                                {% for alert in recent_alerts %}
-                                    {% if not alert.read %}
-                                        <li>
-                                            <a class="dropdown-item unread-alert" href="{% url 'pfinance:alert_detail' alert.id %}">
-                                                <div class="d-flex align-items-start">
-                                                    <i class="bi bi-{% if alert.alert_type == 'budget' %}graph-down-arrow text-primary{% elif alert.alert_type == 'payment' %}calendar-check-fill text-warning{% elif alert.alert_type == 'goal' %}trophy-fill text-success{% else %}info-circle-fill text-info{% endif %} me-2 mt-1"></i>
-                                                    <div>
-                                                        <div class="fw-semibold">{{ alert.title }}</div>
-                                                        <small class="text-muted">{{ alert.get_alert_type_display }}</small>
-                                                        <div class="small text-muted mt-1">{{ alert.created_at|timesince }} atrás</div>
-                                                    </div>
+                        <li class="dropdown-header fw-bold px-3 py-2">Tus Alertas</li>
+                        
+                        {% if recent_alerts %}
+                            {% for alert in recent_alerts %}
+                                {% if not alert.read %}
+                                    <li>
+                                        <a class="dropdown-item unread-alert" href="{% url 'pfinance:alert_detail' alert.id %}">
+                                            <div class="d-flex align-items-start">
+                                                <i class="bi bi-{% if alert.alert_type == 'budget' %}graph-down-arrow text-primary{% elif alert.alert_type == 'payment' %}calendar-check-fill text-warning{% elif alert.alert_type == 'goal' %}trophy-fill text-success{% else %}info-circle-fill text-info{% endif %} me-2 mt-1"></i>
+                                                <div>
+                                                    <div class="fw-semibold">{{ alert.title }}</div>
+                                                    <small class="text-muted">{{ alert.get_alert_type_display }}</small>
+                                                    <div class="small text-muted mt-1">{{ alert.created_at|timesince }} atrás</div>
                                                 </div>
-                                            </a>
-                                        </li>
-                                    {% endif %}
-                                {% endfor %}
-                                {% if unread_count < 1 %}
-                                    <li class="px-3 py-3 text-center text-muted">
-                                    <i class="bi bi-bell-slash-fill d-block mb-2" style="font-size: 1.5rem;"></i>
-                                    No tienes alertas nuevas
-                                </li>
+                                            </div>
+                                        </a>
+                                    </li>
                                 {% endif %}
-                            {% else %}
+                            {% endfor %}
+                            {% if unread_count < 1 %}
                                 <li class="px-3 py-3 text-center text-muted">
-                                    <i class="bi bi-bell-slash-fill d-block mb-2" style="font-size: 1.5rem;"></i>
-                                    No tienes alertas
-                                </li>
-                            {% endif %}
-                            <li><hr class="dropdown-divider mx-3"></li>
-                            <li>
-                                <a class="dropdown-item text-center" href="{% url 'pfinance:alerts' %}">
-                                    Ver todas las alertas <i class="bi bi-chevron-right ms-1"></i>
-                                </a>
+                                <i class="bi bi-bell-slash-fill d-block mb-2" style="font-size: 1.5rem;"></i>
+                                No tienes alertas nuevas
                             </li>
-                        </ul>
-                    </li>
+                            {% endif %}
+                        {% else %}
+                            <li class="px-3 py-3 text-center text-muted">
+                                <i class="bi bi-bell-slash-fill d-block mb-2" style="font-size: 1.5rem;"></i>
+                                No tienes alertas
+                            </li>
+                        {% endif %}
+                        <li><hr class="dropdown-divider mx-3"></li>
+                        <li>
+                            <a class="dropdown-item text-center" href="{% url 'pfinance:alerts' %}">
+                                Ver todas las alertas <i class="bi bi-chevron-right ms-1"></i>
+                            </a>
+                        </li>
+                    </ul>
+                </li>
 
-                    <!-- Perfil Usuario -->
-                    <li class="nav-item dropdown">
-                        <a class="nav-link dropdown-toggle d-flex align-items-center {% if request.resolver_match.view_name == 'pfinance:profile' or request.resolver_match.view_name == 'pfinance:profile_edit' %}active border-bottom border-primary{% endif %}" href="#" id="userDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-                            <span class="me-2">{{ user.username }}</span>
-                            {% if user.profile.foto_perfil %}
-                                <img src="{{ user.profile.foto_perfil.url }}" alt="Foto de perfil" class="rounded-circle me-1" style="width: 32px; height: 32px; object-fit: cover;">
-                            {% else %}
-                                <i class="bi bi-person-circle"></i>
-                            {% endif %}
-                        </a>
-                        <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="userDropdown">
-                            <li>
-                                <a class="dropdown-item" href="{% url 'pfinance:profile' %}">
-                                    <i class="bi bi-person me-2"></i> Perfil
-                                </a>
-                            </li>
-                            <li><hr class="dropdown-divider"></li>
-                            <li>
-                                <form method="post" action="{% url 'pfinance:logout' %}">
-                                    {% csrf_token %}
-                                    <button type="submit" class="dropdown-item">
-                                        <i class="bi bi-box-arrow-right me-2"></i> Cerrar sesión
-                                    </button>
-                                </form>
-                            </li>
-                        </ul>
-                    </li>
-                {% else %}
+                <!-- Perfil Usuario -->
+                <li class="nav-item dropdown">
+                    <a class="nav-link dropdown-toggle d-flex align-items-center {% if request.resolver_match.view_name == 'pfinance:profile' or request.resolver_match.view_name == 'pfinance:profile_edit' %}active border-bottom border-primary{% endif %}" href="#" id="userDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                        <span class="me-2">{{ user.username }}</span>
+                        {% if user.profile.foto_perfil %}
+                            <img src="{{ user.profile.foto_perfil.url }}" alt="Foto de perfil" class="rounded-circle me-1" style="width: 32px; height: 32px; object-fit: cover;">
+                        {% else %}
+                            <i class="bi bi-person-circle"></i>
+                        {% endif %}
+                    </a>
+                    <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="userDropdown">
+                        <li>
+                            <a class="dropdown-item" href="{% url 'pfinance:profile' %}">
+                                <i class="bi bi-person me-2"></i> Perfil
+                            </a>
+                        </li>
+                        <li><hr class="dropdown-divider"></li>
+                        <li>
+                            <form method="post" action="{% url 'pfinance:logout' %}">
+                                {% csrf_token %}
+                                <button type="submit" class="dropdown-item">
+                                    <i class="bi bi-box-arrow-right me-2"></i> Cerrar sesión
+                                </button>
+                            </form>
+                        </li>
+                    </ul>
+                </li>
+            </ul>
+            {% else %}
+                <ul class="navbar-nav">
                     <!-- Usuario no autenticado -->
                     <li class="nav-item">
                         <a class="btn btn-success me-2" href="{% url 'pfinance:login' %}">
@@ -146,8 +147,8 @@
                             <i class="bi bi-person-plus me-1"></i> Registrarse
                         </a>
                     </li>
-                {% endif %}
-            </ul>
+                </ul>
+            {% endif %}
         </div>
     </div>
 </header>

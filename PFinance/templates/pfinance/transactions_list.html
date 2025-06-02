@@ -36,7 +36,7 @@
                     <div class="card bg-success text-white mb-3 mb-md-0">
                         <div class="card-body">
                             <h5 class="card-title">Ingresos</h5>
-                            <p class="display-6">{{ total_income|floatformat:2 }} {{ request.user.profile.currency }}</p>
+                            <p class="display-6 text-center">{{ total_income|floatformat:2 }} {{ request.user.profile.currency }}</p>
                         </div>
                     </div>
                 </div>
@@ -44,7 +44,7 @@
                     <div class="card bg-danger text-white mb-3 mb-md-0">
                         <div class="card-body">
                             <h5 class="card-title">Gastos</h5>
-                            <p class="display-6">{{ total_expenses|floatformat:2 }} {{ request.user.profile.currency }}</p>
+                            <p class="display-6 text-center">{{ total_expenses|floatformat:2 }} {{ request.user.profile.currency }}</p>
                         </div>
                     </div>
                 </div>
@@ -52,7 +52,7 @@
                     <div class="card bg-warning text-white mb-3 mb-md-0">
                         <div class="card-body">
                             <h5 class="card-title">Metas</h5>
-                            <p class="display-6">{{ metas|floatformat:2 }} {{ request.user.profile.currency }}</p>
+                            <p class="display-6 text-center">{{ metas|floatformat:2 }} {{ request.user.profile.currency }}</p>
                         </div>
                     </div>
                 </div>
@@ -60,7 +60,7 @@
                     <div class="card bg-primary text-white">
                         <div class="card-body">
                             <h5 class="card-title">Balance</h5>
-                            <p class="display-6">{{ balance|floatformat:2 }} {{ request.user.profile.currency }}</p>
+                            <p class="display-6 text-center">{{ balance|floatformat:2 }} {{ request.user.profile.currency }}</p>
                         </div>
                     </div>
                 </div>
