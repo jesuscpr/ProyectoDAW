@@ -3,6 +3,9 @@ import os
 import django
 from datetime import datetime, timedelta
 from decimal import Decimal
+
+from django.conf import settings
+from django.core.files import File
 from django.utils import timezone
 
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'ProyectoDAW.settings')
@@ -31,9 +34,27 @@ def create_users():
         last_name='Pérez'
     )
 
-    # Crear perfiles de usuario
-    UserProfile.objects.create(user=user1, currency='EUR', notification_app=True)
-    UserProfile.objects.create(user=admin, currency='EUR', notification_app=True)
+    ruta_imagen = os.path.join(settings.BASE_DIR, 'PFinance', 'static', 'logo.png')
+
+    with open(ruta_imagen, 'rb') as f:
+        imagen = File(f)
+
+        perfil1 = UserProfile.objects.create(
+            user=user1,
+            currency='EUR',
+            notification_app=True,
+        )
+        perfil1.foto_perfil.save('logo.png', imagen, save=True)
+
+    with open(ruta_imagen, 'rb') as f:
+        imagen = File(f)
+
+        perfil_admin = UserProfile.objects.create(
+            user=admin,
+            currency='EUR',
+            notification_app=True,
+        )
+        perfil_admin.foto_perfil.save('default.jpg', imagen, save=True)
 
     return user1
 
