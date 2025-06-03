@@ -1,5 +1,5 @@
-# populate_db.py
 import os
+
 import django
 from datetime import datetime, timedelta
 from decimal import Decimal
@@ -39,8 +39,8 @@ def create_users():
 
 
 def create_categories():
-    # Categorías de gastos (is_expense=True)
-    expense_categories = [
+    # Categorías
+    all_categories = [
         ('Nómina', 'Salario mensual', 'money-bill-wave', False),
         ('Venta', 'Venta de productos', 'shopping-bag', False),
         ('Ocio', 'Entretenimiento y diversión', 'film', True),
@@ -51,7 +51,7 @@ def create_categories():
     ]
 
     categories = []
-    for name, desc, icon, is_expense in expense_categories:
+    for name, desc, icon, is_expense in all_categories:
         categories.append(
             Category.objects.create(
                 name=name,
@@ -65,40 +65,56 @@ def create_categories():
 
 
 def create_transactions(user, categories):
-    today = timezone.now()
     transactions = []
 
-    cat_gasto = [cat for cat in categories if cat.is_expense]
+    grafica = [
+        # Enero
+        (Decimal('2500'), categories[0], timezone.make_aware(datetime(2025, 1, 4, 12, 0)), 'Salario', False),
+        (Decimal('150'), categories[3], timezone.make_aware(datetime(2025, 1, 5, 12, 30)), 'Viaje', True),
+        (Decimal('50'), categories[4], timezone.make_aware(datetime(2025, 1, 6, 16, 30)), 'Compras', True),
+        (Decimal('10'), categories[5], timezone.make_aware(datetime(2025, 1, 6, 16, 30)), 'Suscripción', True),
+        (Decimal('10'), categories[2], timezone.make_aware(datetime(2025, 1, 12, 19, 30)), 'Bolos', True),
+        # Febrero
+        (Decimal('2500'), categories[0], timezone.make_aware(datetime(2025, 2, 4, 12, 0)), 'Salario', False),
+        (Decimal('75'), categories[3], timezone.make_aware(datetime(2025, 2, 15, 18, 00)), 'Viaje', True),
+        (Decimal('10'), categories[5], timezone.make_aware(datetime(2025, 2, 6, 16, 30)), 'Suscripción', True),
+        (Decimal('68'), categories[4], timezone.make_aware(datetime(2025, 2, 10, 18, 10)), 'Compras', True),
+        (Decimal('20'), categories[2], timezone.make_aware(datetime(2025, 2, 18, 16, 0)), 'Karting', True),
+        # Marzo
+        (Decimal('2500'), categories[0], timezone.make_aware(datetime(2025, 3, 4, 12, 0)), 'Salario', False),
+        (Decimal('115'), categories[3], timezone.make_aware(datetime(2025, 3, 25, 10, 50)), 'Viaje', True),
+        (Decimal('10'), categories[5], timezone.make_aware(datetime(2025, 3, 6, 16, 30)), 'Suscripción', True),
+        (Decimal('90'), categories[4], timezone.make_aware(datetime(2025, 3, 8, 20, 40)), 'Compras', True),
+        (Decimal('20'), categories[2], timezone.make_aware(datetime(2025, 3, 28, 11, 0)), 'Juego', True),
+        # Abril
+        (Decimal('2500'), categories[0], timezone.make_aware(datetime(2025, 4, 4, 12, 0)), 'Salario', False),
+        (Decimal('155'), categories[3], timezone.make_aware(datetime(2025, 4, 5, 18, 00)), 'Viaje', True),
+        (Decimal('10'), categories[5], timezone.make_aware(datetime(2025, 4, 6, 16, 30)), 'Suscripción', True),
+        (Decimal('20'), categories[4], timezone.make_aware(datetime(2025, 4, 15, 10, 0)), 'Compras', True),
+        (Decimal('30'), categories[2], timezone.make_aware(datetime(2025, 4, 22, 15, 50)), 'Sala de juegos', True),
+        # Mayo
+        (Decimal('2500'), categories[0], timezone.make_aware(datetime(2025, 5, 4, 12, 0)), 'Salario', False),
+        (Decimal('125'), categories[3], timezone.make_aware(datetime(2025, 5, 5, 18, 00)), 'Viaje', True),
+        (Decimal('10'), categories[5], timezone.make_aware(datetime(2025, 5, 6, 16, 30)), 'Suscripción', True),
+        (Decimal('13'), categories[4], timezone.make_aware(datetime(2025, 5, 10, 11, 10)), 'Compras', True),
+        (Decimal('10'), categories[2], timezone.make_aware(datetime(2025, 5, 18, 18, 40)), 'Bolos', True),
+        # Junio
+        (Decimal('2500'), categories[0], timezone.make_aware(datetime(2025, 6, 4, 12, 0)), 'Salario', False),
+        (Decimal('175'), categories[3], timezone.make_aware(datetime(2025, 6, 5, 18, 00)), 'Viaje', True),
+        (Decimal('10'), categories[5], timezone.make_aware(datetime(2025, 6, 6, 16, 30)), 'Suscripción', True),
+        (Decimal('50'), categories[4], timezone.make_aware(datetime(2025, 6, 9, 20, 0)), 'Compras', True),
+        (Decimal('20'), categories[2], timezone.make_aware(datetime(2025, 6, 11, 17, 30)), 'Karting', True),
+    ]
 
-    # Gastos
-    for i in range(1, 31):
-        trans_date = today - timedelta(days=i)
-        amount = Decimal(f'{i * 5.50:.2f}')
-
+    for amount, category, date, desc, expense in grafica:
         transactions.append(
             Transaction.objects.create(
                 user=user,
                 amount=amount,
-                category=cat_gasto[i % len(cat_gasto)],
-                date=trans_date,
-                description=f'Transacción #{i}',
-                is_expense=True
-            )
-        )
-
-    # Ingresos
-    for i in range(1, 6):
-        trans_date = today - timedelta(days=i * 7)
-        amount = Decimal('1200.00')
-
-        transactions.append(
-            Transaction.objects.create(
-                user=user,
-                amount=amount,
-                category=categories[0],  # Nómina
-                date=trans_date,
-                description='Salario mensual',
-                is_expense=False
+                category=category,
+                date=date,
+                description=desc,
+                is_expense=expense
             )
         )
 
@@ -109,12 +125,12 @@ def create_budgets(user, categories):
     budgets = []
 
     for i, category in enumerate(categories):
-        if category.is_expense:  # Solo presupuestos para gastos
+        if category.is_expense:
             budgets.append(
                 Budget.objects.create(
                     user=user,
                     category=category,
-                    amount=Decimal(f'{(i + 1) * 200:.2f}'),
+                    amount=Decimal(f'{(i + 1) * 20:.2f}'),
                     frequency='monthly',
                     is_active=True
                 )
@@ -129,9 +145,9 @@ def create_recurring_payments(user, categories):
 
     # Suscripciones
     services = [
-        ('Netflix', Decimal('12.99'), categories[5]),  # Suscripción
-        ('Gimnasio', Decimal('35.00'), categories[5]),  # Suscripción
-        ('Spotify', Decimal('9.99'), categories[5]),  # Suscripción
+        ('Netflix', Decimal('12.99'), categories[5]),
+        ('Gimnasio', Decimal('35.00'), categories[5]),
+        ('Spotify', Decimal('9.99'), categories[5]),
     ]
 
     for name, amount, category in services:
@@ -188,7 +204,7 @@ def create_goals(user):
 
     goal_data = [
         ('Viaje a Japón', Decimal('5000.00'), Decimal('1200.00'), 'Ahorrar para viaje'),
-        ('Nuevo portátil', Decimal('1200.00'), Decimal('800.00'), 'MacBook Pro'),
+        ('Nuevo portátil', Decimal('2500.00'), Decimal('1200.00'), 'MacBook Pro'),
         ('Fondo de emergencia', Decimal('10000.00'), Decimal('3500.00'), '6 meses de gastos'),
     ]
 
