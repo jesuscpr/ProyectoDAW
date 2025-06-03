@@ -1,7 +1,11 @@
+import os
+
 from django import forms
+from django.conf import settings
 from django.contrib.auth.forms import UserCreationForm
 from django.contrib.auth.models import User
 from django.core.exceptions import ValidationError
+from django.core.files import File
 from django.db import transaction
 from django.utils import timezone
 
@@ -73,11 +77,17 @@ class SignUpForm(UserCreationForm):
     def save(self, commit=True):
         user = super().save(commit=commit)
 
-        UserProfile.objects.create(
-            user=user,
-            currency=self.cleaned_data['currency'],
-            notification_app=self.cleaned_data['notification_app']
-        )
+        # Ruta al archivo en static
+        static_image_path = os.path.join(settings.BASE_DIR, 'PFinance', 'static', 'logo.png')
+
+        with open(static_image_path, 'rb') as f:
+            django_file = File(f)
+            profile = UserProfile.objects.create(
+                user=user,
+                currency=self.cleaned_data['currency'],
+                notification_app=self.cleaned_data['notification_app'],
+            )
+            profile.foto_perfil.save('logo.png', django_file, save=True)
 
         return user
 
