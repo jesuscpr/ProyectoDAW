@@ -51,7 +51,7 @@ services:
     #  - "8000:8000"
     volumes:
       - ./staticfiles:/app/staticfiles
-      - ./web/media:/app/web/media
+      - ./media:/app/web/media
     env_file:
       - .env
     depends_on:
@@ -127,7 +127,7 @@ services:
   media-server:
     image: nginx:alpine
     volumes:
-      - ./web/media:/usr/share/nginx/html/media:ro
+      - ./media:/usr/share/nginx/html/media:ro
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.media.rule=Host(`pfinance.jesusperez.tech`) && PathPrefix(`/media`)"
