@@ -57,7 +57,7 @@ services:
     depends_on:
       - db
       - mailpit
-    command: gunicorn PFinance.wsgi:application --bind 0.0.0.0:8000 --workers 4 --threads 2
+    command: gunicorn ProyectoDAW.wsgi:application --bind 0.0.0.0:8000 --workers 4 --threads 2
     restart: unless-stopped  # Asegura que el contenedor se reinicie si falla
     labels:
       - "traefik.enable=true"
