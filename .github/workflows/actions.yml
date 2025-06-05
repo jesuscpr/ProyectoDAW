@@ -1,0 +1,72 @@
+name: docker&aws
+
+on:
+  push:
+    branches: [ main ]
+    paths:
+      - 'ProyectoDAW/**'
+      - 'PFinance/**'
+      - 'data/**'
+      - 'Dockerfile'
+      - 'docker-compose.yml'
+      - 'manage.py'
+      - 'requirements.txt'
+  pull_request:
+    branches: [ main ]
+    paths:
+      - 'ProyectoDAW/**'
+      - 'PFinance/**'
+      - 'data/**'
+      - 'Dockerfile'
+      - 'docker-compose.yml'
+      - 'manage.py'
+      - 'requirements.txt'
+
+env:
+  IMAGE_NAME: proyectodaw
+  IMAGE_TAG: latest
+  COMPOSE: docker-compose.yml
+
+jobs:
+  build:
+    name: build and push Docker image
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Login to DockerHub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          push: true
+          tags: ${{ secrets.DOCKERHUB_USERNAME }}/${{ env.IMAGE_NAME }}:${{ env.IMAGE_TAG }}
+
+  aws:
+    name: Deploy image to aws
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - name: script deploy docker services
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.AWS_HOSTNAME }}
+          username: ${{ secrets.AWS_USERNAME }}
+          key: ${{ secrets.AWS_PRIVATEKEY }}
+          port: ${{ secrets.PORT }}
+          script: |
+            set -e
+            APP_DIR=ProyectoDAW
+            IMAGE=${{ secrets.DOCKERHUB_USERNAME }}/${{ env.IMAGE_NAME }}:${{ env.IMAGE_TAG }}
+
+            cd $APP_DIR
+            git pull
+            docker compose down
+            docker images ${{ secrets.DOCKERHUB_USERNAME }}/${{ env.IMAGE_NAME }} --format "{{.ID}}" | xargs -r docker rmi -f
+            docker pull $IMAGE
+            docker compose up -d

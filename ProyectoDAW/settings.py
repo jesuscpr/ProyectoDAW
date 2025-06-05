@@ -13,19 +13,30 @@ https://docs.djangoproject.com/en/5.1/ref/settings/
 import os
 from celery.schedules import crontab
 from pathlib import Path
+import environ
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
+# django-environ
+env = environ.Env(
+    DEBUG=(bool, False)
+)
+
+# Cargar variables
+environ.Env.read_env(os.path.join(BASE_DIR, '.env'))
+
+# Debug
+DEBUG = env('DEBUG')
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/5.1/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-s4ej%m)#6&*^v=h8%iism+%xz2aw*a(o(7fb3njqcs8)n7)9j%'
+SECRET_KEY = env('SECRET_KEY', default='')
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+# DEBUG = True
 
 ALLOWED_HOSTS = []
 
@@ -124,10 +135,20 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/5.1/howto/static-files/
 
 STATIC_URL = '/static/'
+STATICFILES_DIRS = [
+    os.path.join(BASE_DIR, 'PFinance/static'),
+]
+STATIC_ROOT = os.path.join(BASE_DIR, 'PFinance/static')
 
 # Media files
 MEDIA_URL = '/media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
+
+SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+
+CSRF_TRUSTED_ORIGINS = [
+    'https://pfinance.jesusperez.tech',
+]
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.1/ref/settings/#default-auto-field
@@ -142,15 +163,18 @@ LOGOUT_REDIRECT_URL = '/'
 
 # Mailpit
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
-EMAIL_HOST = 'mailpit'
-EMAIL_PORT = 1025
+EMAIL_HOST = env("EMAIL_HOST", default="mailpit")
+EMAIL_PORT = env.int("EMAIL_PORT", default=1025)
 EMAIL_USE_TLS = False
+EMAIL_USE_SSL = False
+EMAIL_HOST_USER = env("EMAIL_HOST_USER", default="")
+EMAIL_HOST_PASSWORD = env("EMAIL_HOST_PASSWORD", default="")
 DEFAULT_FROM_EMAIL = 'noreply@planmytrip.com'
 
 
 # Celery
 CELERY_TIMEZONE = 'Europe/Madrid'
-CELERY_BROKER_URL = 'redis://redis:6379/0'
+CELERY_BROKER_URL = env('CELERY_BROKER_URL', default='')
 CELERY_BEAT_SCHEDULE = {
     'process_recurring_incomes': {
         'task': 'PFinance.tasks.process_recurring_incomes',
