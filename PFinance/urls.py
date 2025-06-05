@@ -59,7 +59,7 @@ urlpatterns = [
     path('goals/<int:pk>/delete/', views.GoalDeleteView.as_view(), name='goal_delete'),
     path('<int:pk>/edit/', views.GoalUpdateAmountView.as_view(), name='goal_edit'),
 
-]
+] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
 
 if settings.DEBUG:
     urlpatterns += static(settings.STATIC_URL, document_root=settings.STATICFILES_DIRS[0])
