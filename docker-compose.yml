@@ -1,32 +1,80 @@
 services:
-  web:
-    build:
-      context: .
-      dockerfile: Dockerfile
-    container_name: django_web
+  traefik:
+    image: "traefik:v3.2"
+    container_name: "traefik"
+
+    command:
+      - "--log.level=INFO"  # logging levels are TRACE, DEBUG, INFO, WARN, ERROR, FATAL, and PANIC.
+      - "--api.dashboard=true"
+      # - "--api.insecure=true"
+      - "--providers.docker=true"
+      - "--providers.docker.exposedbydefault=false"
+
+      - "--entrypoints.web.address=:80"
+
+      # Bloque letsencrypt
+      - "--entrypoints.web.http.redirections.entrypoint.to=websecure"
+      - "--entrypoints.web.http.redirections.entrypoint.scheme=https"
+      - "--entryPoints.websecure.address=:443"
+
+      - "--certificatesresolvers.myresolver.acme.tlschallenge=true"
+      - "--certificatesresolvers.myresolver.acme.email=jperrob244@fp.iesromerovargas.com"
+      - "--certificatesresolvers.myresolver.acme.storage=/letsencrypt/acme.json"
+
+      ## La línea comentada --certificatesresolvers.myresolver.acme.caserver apunta al entorno de pruebas de ## Let's Encrypt. Esto es útil para evitar límites de emisión durante las pruebas.
+      # # - "--certificatesresolvers.myresolver.acme.caserver=https://acme-staging-v02.api.letsencrypt.org/directory"
+
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.traefik.rule=Host(`jesusperez.tech`)"
+      - "traefik.http.routers.traefik.service=api@internal"
+
+      - "traefik.http.routers.traefik.entrypoints=websecure"
+      - "traefik.http.routers.traefik.tls.certresolver=myresolver"
+      # Añade autenticación test/test
+      - "traefik.http.routers.traefik.middlewares=myauth"
+      - "traefik.http.middlewares.myauth.basicauth.users=test:$$apr1$$H6uskkkW$$IgXLP6ewTrSuBkTrqE8wj/"
+
     ports:
-      - "8000:8000"
+      - "443:443"
+      - "8080:8080"
+      # - "8000:8000"
+      - "80:80"
+    volumes:
+      - "./letsencrypt:/letsencrypt"
+      - "/var/run/docker.sock:/var/run/docker.sock:ro"
+
+  web:
+    image: ${IMAGE}
+    container_name: django_web
+    #ports:
+    #  - "8000:8000"
     volumes:
       - .:/app
-    environment:
-      - DEBUG=True
-      - DATABASE_URL=postgres://postgres:password@db:5432/django_db
-      - EMAIL_HOST=mailpit
-      - EMAIL_PORT=1025
+      - ./static:/app/static
+    env_file:
+      - .env
     depends_on:
       - db
       - mailpit
-    command: python manage.py runserver 0.0.0.0:8000
+    command: gunicorn PFinance.wsgi:application --bind 0.0.0.0:8000 --workers 4 --threads 2
     restart: unless-stopped  # Asegura que el contenedor se reinicie si falla
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.web.rule=Host(`pfinance.jesusperez.tech`)"
+      - "traefik.http.routers.web.entrypoints=websecure"
+      - "traefik.http.routers.web.tls.certresolver=myresolver"
+      - "traefik.http.services.web.loadbalancer.server.port=8000"
 
   db:
     image: postgres:16
     container_name: postgres_db
-    ports:
-      - "5432:5432"
+    #ports:
+    #  - "5432:5432"
     environment:
-      POSTGRES_PASSWORD: password
-      POSTGRES_DB: django_db
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
     volumes:
       - postgres_data:/var/lib/postgresql/data
     restart: unless-stopped
@@ -39,53 +87,42 @@ services:
     ports:
       - "8025:8025" # Interfaz web
       - "1025:1025" # SMTP de prueba
-    environment:
-      MP_MAX_MESSAGES: 5000
-      MP_DATABASE: /data/mailpit.db
-      MP_SMTP_AUTH_ACCEPT_ANY: 1
-      MP_SMTP_AUTH_ALLOW_INSECURE: 1
+    env_file:
+      - .env
     restart: unless-stopped
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.mailpit.rule=Host(`mailpit.jesusperez.tech`)"
+      - "traefik.http.routers.mailpit.entrypoints=websecure"
+      - "traefik.http.routers.mailpit.tls.certresolver=myresolver"
+      - "traefik.http.services.mailpit.loadbalancer.server.port=8025"
 
   redis:
     image: redis:7
-    container_name: redis
-    ports:
-      - "6379:6379"
-    restart: unless-stopped
+    #ports:
+    #  - "6379:6379"
 
   celery:
-    build:
-      context: .
-      dockerfile: Dockerfile
-    container_name: celery_worker
+    image: ${IMAGE}
     command: celery -A ProyectoDAW worker --loglevel=info
     volumes:
       - .:/app
     depends_on:
       - web
-      - db
       - redis
-    environment:
-      - DATABASE_URL=postgres://postgres:password@db:5432/django_db
-      - CELERY_BROKER_URL=redis://redis:6379/0
-    restart: unless-stopped
+    env_file:
+      - .env
 
   celery-beat:
-    build:
-      context: .
-      dockerfile: Dockerfile
-    container_name: celery_beat
+    image: ${IMAGE}
     command: celery -A ProyectoDAW beat --loglevel=info
     volumes:
       - .:/app
     depends_on:
       - web
-      - db
       - redis
-    environment:
-      - DATABASE_URL=postgres://postgres:password@db:5432/django_db
-      - CELERY_BROKER_URL=redis://redis:6379/0
-    restart: unless-stopped
+    env_file:
+      - .env
 
 volumes:
   postgres_data:
