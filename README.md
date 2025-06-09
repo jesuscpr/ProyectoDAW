@@ -7,7 +7,7 @@ PFinance - Finanzas personales
 Jesús Carmelo Pérez Robles
 
 ## Introducción del proyecto
-PFinance es una aplicación web diseñada para ayudar a los usuarios a gestionar eficientemente sus finanzas personales. El proyecto nace de la necesidad de tener una herramienta intuitiva que permita a cualquier persona, independientemente de sus conocimientos financieros, llevar un control detallado de sus ingresos y gastos, visualizar su situación económica de forma clara mediante gráficos interactivos, y tomar decisiones más informadas sobre su economía personal. A diferencia de otras soluciones en el mercado, PFinance se enfoca en la simplicidad de uso sin sacrificar funcionalidades avanzadas como el análisis predictivo de tendencias y la gestión de presupuestos personalizados.
+PFinance es una aplicación web diseñada para ayudar a los usuarios a gestionar eficientemente sus finanzas personales. El proyecto nace de la necesidad de tener una herramienta intuitiva que permita a cualquier persona, independientemente de sus conocimientos financieros, llevar un control detallado de sus ingresos y gastos, visualizar su situación económica de forma clara mediante gráficos interactivos, y tomar decisiones más informadas sobre su economía personal. A diferencia de otras soluciones en el mercado, PFinance se enfoca en la simplicidad de uso sin sacrificar funcionalidades avanzadas como el análisis de tendencias y la gestión de presupuestos personalizados.
 
 ## Finalidad
 PFinance surge como respuesta a la necesidad creciente de herramientas digitales que faciliten la gestión financiera personal.
